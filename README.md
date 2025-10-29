@@ -1,57 +1,93 @@
-# Sample Hardhat 3 Beta Project (`mocha` and `ethers`)
+# 💼 XWallet — Shared Wallets for Families and Organizations (Built on Stablecoins)
 
-This project showcases a Hardhat 3 Beta project using `mocha` for tests and the `ethers` library for Ethereum interactions.
+XWallet is a decentralized shared wallet platform designed for **families** and **organizations** to manage finances collaboratively using **stablecoins**. It enables features like spend limits, reimbursements, role-based access, and controlled spending—all while leveraging the stability and transparency of blockchain.
 
-To learn more about the Hardhat 3 Beta, please visit the [Getting Started guide](https://hardhat.org/docs/getting-started#getting-started-with-hardhat-3). To share your feedback, join our [Hardhat 3 Beta](https://hardhat.org/hardhat3-beta-telegram-group) Telegram group or [open an issue](https://github.com/NomicFoundation/hardhat/issues/new) in our GitHub issue tracker.
+---
 
-## Project Overview
+## 🚀 Features
 
-This example project includes:
+- 👨‍👩‍👧‍👦 **Shared Wallets for Families**
+  - Parents can register wallets for children
+  - Set spend limits and review activity
+  - Reimburse wallet members instantly
 
-- A simple Hardhat configuration file.
-- Foundry-compatible Solidity unit tests.
-- TypeScript integration tests using `mocha` and ethers.js
-- Examples demonstrating how to connect to different types of networks, including locally simulating OP mainnet.
+- 🏢 **Organization Wallets**
+  - Teams and DAOs can fund wallets for contributors
+  - Reimburse individuals or groups
+  - Track spend behavior with dashboards
 
-## Usage
+- 💰 **Stablecoin Integration**
+  - All transactions use stablecoins (e.g., USDC)
+  - No volatility; just stable value transfer
 
-### Running Tests
+- 🧾 **Reimbursement System**
+  - Reimburse members or the whole organization wallet
+  - Track who got reimbursed and how much
 
-To run all the tests in the project, execute the following command:
+- 📊 **Spending Dashboard**
+  - Visual analytics on wallet balance, spend patterns
+  - Set daily/weekly/monthly limits
 
-```shell
-npx hardhat test
-```
+---
 
-You can also selectively run the Solidity or `mocha` tests:
+## 📱 Pages Overview
 
-```shell
-npx hardhat test solidity
-npx hardhat test mocha
-```
+| Page | Description |
+|------|-------------|
+| **Home** | Project landing page and overview |
+| **Wallet/Dashboard** | User dashboard with wallet balance, spend limits, and activity |
+| **Register Wallet** | Admin page to register new family or org wallets |
+| **Reimburse Member** | Reimburse individual wallet holders |
+| **Reimburse Organization** | Bulk or org-level reimbursements |
+| **Spend Page** | For registered users to spend within their allowed limits |
 
-### Make a deployment to Sepolia
+---
 
-This project includes an example Ignition module to deploy the contract. You can deploy this module to a locally simulated chain or to Sepolia.
+## 🧩 Built With
 
-To run the deployment to a local chain:
+- **Frontend:** React.js, Tailwind CSS, Mantine UI
+- **Backend:** Solidity (Smart Contracts), Node.js
+- **Blockchain:** Ethereum or compatible EVM chain
+- **Wallet:** MetaMask / WalletConnect Integration
+- **Stablecoin:** USDC (or configurable)
 
-```shell
-npx hardhat ignition deploy ignition/modules/Counter.ts
-```
+---
 
-To run the deployment to Sepolia, you need an account with funds to send the transaction. The provided Hardhat configuration includes a Configuration Variable called `SEPOLIA_PRIVATE_KEY`, which you can use to set the private key of the account you want to use.
+## 📌 Why XWallet?
 
-You can set the `SEPOLIA_PRIVATE_KEY` variable using the `hardhat-keystore` plugin or by setting it as an environment variable.
+Traditional wallets lack shared access and oversight. XWallet bridges that gap by enabling **transparent**, **limit-based**, and **collaborative** wallets. Perfect for:
 
-To set the `SEPOLIA_PRIVATE_KEY` config variable using `hardhat-keystore`:
+- Families giving kids safe spending access
+- Organizations reimbursing employees or contributors
+- Clubs, DAOs, and remote teams
 
-```shell
-npx hardhat keystore set SEPOLIA_PRIVATE_KEY
-```
+All powered by **stablecoins**, ensuring predictability and usability.
 
-After setting the variable, you can run the deployment with the Sepolia network:
+---
 
-```shell
-npx hardhat ignition deploy --network sepolia ignition/modules/Counter.ts
-```
+## 🧱 Architecture
+
+[Frontend (React)] ---> [Smart Contracts (Solidity)] ---> [Stablecoin (USDC)]
+| | |
+User Interaction Access Control Stable Transactions
+| ↓ ↓
+MetaMask / WalletConnect --- Blockchain Network (EVM)
+
+
+---
+
+## 🧪 Running the Project Locally
+
+1. **Clone the Repo**
+   ```bash
+   git clone https://github.com/yourusername/xwallet.git
+   cd xwallet
+   cd frontend
+   npm install
+   npm run dev
+
+2. **Configure Wallet**
+
+   Connect MetaMask to your local network or testnet
+
+   Deploy smart contracts using Hardhat or Remix
