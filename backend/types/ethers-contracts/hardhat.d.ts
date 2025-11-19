@@ -10,13 +10,17 @@ import * as Contracts from "./index.js";
 
 declare module "@nomicfoundation/hardhat-ethers/types" {
   interface HardhatEthersHelpers extends HardhatEthersHelpersBase {
-  getContractFactory(name: 'WalletX', signerOrOptions?: ethers.Signer | FactoryOptions): Promise<Contracts.WalletX__factory>
+  getContractFactory(name: 'MockERC20', signerOrOptions?: ethers.Signer | FactoryOptions): Promise<Contracts.MockERC20__factory>
+getContractFactory(name: 'WalletX', signerOrOptions?: ethers.Signer | FactoryOptions): Promise<Contracts.WalletX__factory>
 
-  getContractAt(name: 'WalletX', address: string | ethers.Addressable, signer?: ethers.Signer): Promise<Contracts.WalletX>
+  getContractAt(name: 'MockERC20', address: string | ethers.Addressable, signer?: ethers.Signer): Promise<Contracts.MockERC20>
+getContractAt(name: 'WalletX', address: string | ethers.Addressable, signer?: ethers.Signer): Promise<Contracts.WalletX>
 
-  deployContract(name: 'WalletX', signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.WalletX>
+  deployContract(name: 'MockERC20', signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.MockERC20>
+deployContract(name: 'WalletX', signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.WalletX>
 
-  deployContract(name: 'WalletX', args: any[], signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.WalletX>
+  deployContract(name: 'MockERC20', args: any[], signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.MockERC20>
+deployContract(name: 'WalletX', args: any[], signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.WalletX>
 
     // default types
     getContractFactory(
