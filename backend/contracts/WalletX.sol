@@ -69,4 +69,13 @@ contract WalletX {
 
     }
 
+
+
+    // Getter functions
+
+    function getWalletAdmin() onlyAdmin() external view returns(Wallet memory admin) {
+        admin = walletAdmin[msg.sender];
+    }
+
+
 }
