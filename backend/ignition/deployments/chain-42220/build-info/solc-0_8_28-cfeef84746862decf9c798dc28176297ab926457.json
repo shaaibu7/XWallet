@@ -1,0 +1,42 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_28-cfeef84746862decf9c798dc28176297ab926457",
+  "solcVersion": "0.8.28",
+  "solcLongVersion": "0.8.28+commit.7893614a",
+  "userSourceNameMap": {
+    "contracts/WalletX.sol": "project/contracts/WalletX.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "cancun",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode",
+            "evm.deployedBytecode",
+            "evm.methodIdentifiers",
+            "metadata"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/contracts/interfaces/IERC20.sol": {
+        "content": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.0;\n\ninterface IERC20 {\n    function totalSupply() external view returns (uint256);\n\n    function balanceOf(address account) external view returns (uint256);\n\n    function transfer(address to, uint256 amount) external returns (bool);\n\n    function allowance(address owner, address spender) external view returns (uint256);\n\n    function approve(address spender, uint256 amount) external returns (bool);\n\n    function transferFrom(address from, address to, uint256 amount) external returns (bool);\n}\n"
+      },
+      "project/contracts/WalletX.sol": {
+        "content": "// SPDX-License-Identifier: UNLICENSED\npragma solidity ^0.8.28;\n\nimport \"./interfaces/IERC20.sol\";\n\ncontract WalletX {\n    address tokenAddress;\n    address owner;\n    uint256 walletIdTrack = 1;\n\n    struct Wallet {\n        address adminAddress;\n        string walletName;\n        bool active;\n        uint walletId;\n        uint walletBalance;\n        string role;\n    }\n\n    struct WalletMember {\n        address memberAddress;\n        address adminAddress;\n        string organizationName;\n        string name;\n        bool active;\n        uint256 spendLimit;\n        uint256 memberIdentifier;\n        string role;\n    }\n\n    struct memberTransaction {\n        uint256 amount;\n        address reciever;\n    }\n\n    mapping(address => Wallet) walletAdmin;\n    mapping(address => WalletMember) walletMember;\n\n    mapping(address => WalletMember[]) walletOrganisationMembers;\n    mapping(address => memberTransaction[]) memberTransactions;\n\n     modifier onlyAdmin {\n        require(walletAdmin[msg.sender].active == true, \"Not a wallet admin account\");\n        _;\n    }\n\n    constructor(address _tokenAddress) {\n        tokenAddress = _tokenAddress;\n        owner = msg.sender;\n    }\n\n    function registerWallet(\n        string memory _walletName,\n        uint256 _fundAmount\n    ) external {\n        require(\n            walletAdmin[msg.sender].active != true,\n            \"Cannot create multiple wallets with one wallet address\"\n        );\n\n        // fund escrow with funds\n        uint256 allowance = IERC20(tokenAddress).allowance(\n            msg.sender,\n            address(this)\n        );\n        require(\n            allowance >= _fundAmount,\n            \"No allowance to spend funds at the moment\"\n        );\n        IERC20(tokenAddress).transferFrom(\n            msg.sender,\n            address(this),\n            _fundAmount\n        );\n\n        Wallet memory walletOrganisation = Wallet({\n            adminAddress: msg.sender,\n            walletName: _walletName,\n            active: true,\n            walletId: walletIdTrack,\n            walletBalance: _fundAmount,\n            role: \"admin\"\n        });\n\n        walletIdTrack += 1;\n\n        walletAdmin[msg.sender] = walletOrganisation;\n    }\n\n    // Getter functions\n\n    function getWalletAdmin()\n        external\n        view\n        onlyAdmin\n        returns (Wallet memory admin)\n    {\n        admin = walletAdmin[msg.sender];\n    }\n}\n"
+      }
+    }
+  }
+}
