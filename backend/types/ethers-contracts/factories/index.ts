@@ -2,5 +2,6 @@
 /* tslint:disable */
 /* eslint-disable */
 export * as interfaces from './interfaces/index.js';
+export * as lib from './lib/index.js';
 export { MockERC20__factory } from './MockERC20__factory.js';
 export { WalletX__factory } from './WalletX__factory.js';
