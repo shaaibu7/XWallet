@@ -1,9 +1,12 @@
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 
-export default buildModule("CounterModule", (m) => {
-  const counter = m.contract("Counter");
 
-  m.call(counter, "incBy", [5n]);
 
-  return { counter };
+export default buildModule("WalletXModule", (m) => {
+   const tokenAddress = "0xcebA9300f2b948710d2653dD7B07f33A8B32118C";
+
+  const walletX = m.contract("WalletX", [tokenAddress]);
+ 
+
+  return { walletX };
 });
