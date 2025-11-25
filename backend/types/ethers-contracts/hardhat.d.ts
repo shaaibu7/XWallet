@@ -13,18 +13,22 @@ declare module "@nomicfoundation/hardhat-ethers/types" {
   getContractFactory(name: 'MockERC20', signerOrOptions?: ethers.Signer | FactoryOptions): Promise<Contracts.MockERC20__factory>
 getContractFactory(name: 'WalletX', signerOrOptions?: ethers.Signer | FactoryOptions): Promise<Contracts.WalletX__factory>
 getContractFactory(name: 'IERC20', signerOrOptions?: ethers.Signer | FactoryOptions): Promise<Contracts.IERC20__factory>
+getContractFactory(name: 'Error', signerOrOptions?: ethers.Signer | FactoryOptions): Promise<Contracts.Error__factory>
 
   getContractAt(name: 'MockERC20', address: string | ethers.Addressable, signer?: ethers.Signer): Promise<Contracts.MockERC20>
 getContractAt(name: 'WalletX', address: string | ethers.Addressable, signer?: ethers.Signer): Promise<Contracts.WalletX>
 getContractAt(name: 'IERC20', address: string | ethers.Addressable, signer?: ethers.Signer): Promise<Contracts.IERC20>
+getContractAt(name: 'Error', address: string | ethers.Addressable, signer?: ethers.Signer): Promise<Contracts.Error>
 
   deployContract(name: 'MockERC20', signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.MockERC20>
 deployContract(name: 'WalletX', signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.WalletX>
 deployContract(name: 'IERC20', signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.IERC20>
+deployContract(name: 'Error', signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.Error>
 
   deployContract(name: 'MockERC20', args: any[], signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.MockERC20>
 deployContract(name: 'WalletX', args: any[], signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.WalletX>
 deployContract(name: 'IERC20', args: any[], signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.IERC20>
+deployContract(name: 'Error', args: any[], signerOrOptions?: ethers.Signer | DeployContractOptions): Promise<Contracts.Error>
 
     // default types
     getContractFactory(

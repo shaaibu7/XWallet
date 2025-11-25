@@ -2,6 +2,7 @@
 pragma solidity ^0.8.28;
 
 import "./interfaces/IERC20.sol";
+import "./lib/errors.sol";
 
 contract WalletX {
     address tokenAddress;
@@ -86,6 +87,32 @@ contract WalletX {
 
         walletAdmin[msg.sender] = walletOrganisation;
     }
+
+    function onboardMembers(address _memberAddress, string memory _memberName, uint256 _fundAmount, uint256 _memberIdentifier) onlyAdmin external {
+        string memory _organizationName = walletAdmin[msg.sender].walletName;
+        uint walletBalance = walletAdmin[msg.sender].walletBalance;
+
+        if (walletBalance < _fundAmount) {
+            revert Error.InsufficientFunds();
+        }
+
+        
+        WalletMember memory member = WalletMember({
+            memberAddress: _memberAddress,
+            adminAddress: msg.sender,
+            organizationName: _organizationName,
+            name: _memberName,
+            active: true,
+            spendLimit: _fundAmount,
+            memberIdentifier: _memberIdentifier,
+            role: "member"
+        });
+
+        walletMember[_memberAddress] = member;
+        walletOrganisationMembers[msg.sender].push(member);
+
+    }
+
 
     // Getter functions
 

@@ -3,6 +3,8 @@
 /* eslint-disable */
 import type * as interfaces from './interfaces/index.js';
 export type { interfaces };
+import type * as lib from './lib/index.js';
+export type { lib };
 export type { MockERC20 } from './MockERC20.js';
 export type { WalletX } from './WalletX.js';
 export * as factories from './factories/index.js';
@@ -10,3 +12,5 @@ export { MockERC20__factory } from './factories/MockERC20__factory.js';
 export { WalletX__factory } from './factories/WalletX__factory.js';
 export type { IERC20 } from './interfaces/IERC20.js';
 export { IERC20__factory } from './factories/interfaces/IERC20__factory.js';
+export type { Error } from './lib/errors.sol/Error.js';
+export { Error__factory } from './factories/lib/errors.sol/Error__factory.js';
