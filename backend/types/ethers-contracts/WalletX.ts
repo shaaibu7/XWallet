@@ -13,18 +13,20 @@ export declare namespace WalletX {
     }
 
   export interface WalletXInterface extends Interface {
-    getFunction(nameOrSignature: "getWalletAdmin" | "onboardMembers" | "registerWallet" | "reimburseWallet"): FunctionFragment;
+    getFunction(nameOrSignature: "getWalletAdmin" | "onboardMembers" | "registerWallet" | "reimburseMember" | "reimburseWallet"): FunctionFragment;
 
     
 
     encodeFunctionData(functionFragment: 'getWalletAdmin', values?: undefined): string;
 encodeFunctionData(functionFragment: 'onboardMembers', values: [AddressLike, string, BigNumberish, BigNumberish]): string;
 encodeFunctionData(functionFragment: 'registerWallet', values: [string, BigNumberish]): string;
+encodeFunctionData(functionFragment: 'reimburseMember', values: [BigNumberish, BigNumberish]): string;
 encodeFunctionData(functionFragment: 'reimburseWallet', values: [BigNumberish]): string;
 
     decodeFunctionResult(functionFragment: 'getWalletAdmin', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'onboardMembers', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'registerWallet', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'reimburseMember', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'reimburseWallet', data: BytesLike): Result;
   }
 
@@ -88,6 +90,14 @@ decodeFunctionResult(functionFragment: 'reimburseWallet', data: BytesLike): Resu
     
 
     
+    reimburseMember: TypedContractMethod<
+      [_memberIdentifier: BigNumberish, _amount: BigNumberish, ],
+      [void],
+      'nonpayable'
+    >
+    
+
+    
     reimburseWallet: TypedContractMethod<
       [_amount: BigNumberish, ],
       [void],
@@ -110,6 +120,11 @@ getFunction(nameOrSignature: 'onboardMembers'): TypedContractMethod<
     >;
 getFunction(nameOrSignature: 'registerWallet'): TypedContractMethod<
       [_walletName: string, _fundAmount: BigNumberish, ],
+      [void],
+      'nonpayable'
+    >;
+getFunction(nameOrSignature: 'reimburseMember'): TypedContractMethod<
+      [_memberIdentifier: BigNumberish, _amount: BigNumberish, ],
       [void],
       'nonpayable'
     >;

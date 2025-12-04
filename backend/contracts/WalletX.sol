@@ -124,6 +124,24 @@ contract WalletX {
 
     }
 
+     function reimburseMember(uint256 _memberIdentifier, uint256 _amount) external onlyAdmin {
+
+        uint walletBalance = walletAdmin[msg.sender].walletBalance;
+
+        if (walletBalance < _amount) {
+            revert Error.InsufficientFunds();
+        }
+
+        WalletMember[] storage members = walletOrganisationMembers[msg.sender];
+
+        for(uint256 i = 0; i < members.length; i++) {
+            if (members[i].memberIdentifier == _memberIdentifier) {
+                members[i].spendLimit += _amount;
+                walletMember[members[i].memberAddress].spendLimit += _amount;
+            }
+        }
+    }
+
 
     // Getter functions
 
