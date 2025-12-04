@@ -13,17 +13,19 @@ export declare namespace WalletX {
     }
 
   export interface WalletXInterface extends Interface {
-    getFunction(nameOrSignature: "getWalletAdmin" | "onboardMembers" | "registerWallet"): FunctionFragment;
+    getFunction(nameOrSignature: "getWalletAdmin" | "onboardMembers" | "registerWallet" | "reimburseWallet"): FunctionFragment;
 
     
 
     encodeFunctionData(functionFragment: 'getWalletAdmin', values?: undefined): string;
 encodeFunctionData(functionFragment: 'onboardMembers', values: [AddressLike, string, BigNumberish, BigNumberish]): string;
 encodeFunctionData(functionFragment: 'registerWallet', values: [string, BigNumberish]): string;
+encodeFunctionData(functionFragment: 'reimburseWallet', values: [BigNumberish]): string;
 
     decodeFunctionResult(functionFragment: 'getWalletAdmin', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'onboardMembers', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'registerWallet', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'reimburseWallet', data: BytesLike): Result;
   }
 
   
@@ -85,6 +87,14 @@ decodeFunctionResult(functionFragment: 'registerWallet', data: BytesLike): Resul
     >
     
 
+    
+    reimburseWallet: TypedContractMethod<
+      [_amount: BigNumberish, ],
+      [void],
+      'nonpayable'
+    >
+    
+
 
     getFunction<T extends ContractMethod = ContractMethod>(key: string | FunctionFragment): T;
 
@@ -100,6 +110,11 @@ getFunction(nameOrSignature: 'onboardMembers'): TypedContractMethod<
     >;
 getFunction(nameOrSignature: 'registerWallet'): TypedContractMethod<
       [_walletName: string, _fundAmount: BigNumberish, ],
+      [void],
+      'nonpayable'
+    >;
+getFunction(nameOrSignature: 'reimburseWallet'): TypedContractMethod<
+      [_amount: BigNumberish, ],
       [void],
       'nonpayable'
     >;

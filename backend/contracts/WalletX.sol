@@ -113,6 +113,17 @@ contract WalletX {
 
     }
 
+    function reimburseWallet(uint256 _amount) external onlyAdmin {
+        // fund escrow with funds
+        uint256 allowance = IERC20(tokenAddress).allowance(msg.sender, address(this));
+        require(allowance >= _amount, "No allowance to spend funds at the moment");
+        IERC20(tokenAddress).transferFrom(msg.sender, address(this), _amount);
+
+
+        walletAdmin[msg.sender].walletBalance += _amount;
+
+    }
+
 
     // Getter functions
 
