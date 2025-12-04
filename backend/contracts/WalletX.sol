@@ -153,4 +153,10 @@ contract WalletX {
     {
         admin = walletAdmin[msg.sender];
     }
+
+     // fetch admin role for frontend op
+    function getAdminRole(address _userAddress) external view returns(string memory userRole) {
+        userRole = walletAdmin[_userAddress].role;
+
+    }
 }
