@@ -13,17 +13,19 @@ export declare namespace WalletX {
     }
 
   export interface WalletXInterface extends Interface {
-    getFunction(nameOrSignature: "getWalletAdmin" | "onboardMembers" | "registerWallet" | "reimburseMember" | "reimburseWallet"): FunctionFragment;
+    getFunction(nameOrSignature: "getAdminRole" | "getWalletAdmin" | "onboardMembers" | "registerWallet" | "reimburseMember" | "reimburseWallet"): FunctionFragment;
 
     
 
-    encodeFunctionData(functionFragment: 'getWalletAdmin', values?: undefined): string;
+    encodeFunctionData(functionFragment: 'getAdminRole', values: [AddressLike]): string;
+encodeFunctionData(functionFragment: 'getWalletAdmin', values?: undefined): string;
 encodeFunctionData(functionFragment: 'onboardMembers', values: [AddressLike, string, BigNumberish, BigNumberish]): string;
 encodeFunctionData(functionFragment: 'registerWallet', values: [string, BigNumberish]): string;
 encodeFunctionData(functionFragment: 'reimburseMember', values: [BigNumberish, BigNumberish]): string;
 encodeFunctionData(functionFragment: 'reimburseWallet', values: [BigNumberish]): string;
 
-    decodeFunctionResult(functionFragment: 'getWalletAdmin', data: BytesLike): Result;
+    decodeFunctionResult(functionFragment: 'getAdminRole', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'getWalletAdmin', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'onboardMembers', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'registerWallet', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'reimburseMember', data: BytesLike): Result;
@@ -65,6 +67,14 @@ decodeFunctionResult(functionFragment: 'reimburseWallet', data: BytesLike): Resu
 
 
     
+    
+    getAdminRole: TypedContractMethod<
+      [_userAddress: AddressLike, ],
+      [string],
+      'view'
+    >
+    
+
     
     getWalletAdmin: TypedContractMethod<
       [],
@@ -108,7 +118,12 @@ decodeFunctionResult(functionFragment: 'reimburseWallet', data: BytesLike): Resu
 
     getFunction<T extends ContractMethod = ContractMethod>(key: string | FunctionFragment): T;
 
-    getFunction(nameOrSignature: 'getWalletAdmin'): TypedContractMethod<
+    getFunction(nameOrSignature: 'getAdminRole'): TypedContractMethod<
+      [_userAddress: AddressLike, ],
+      [string],
+      'view'
+    >;
+getFunction(nameOrSignature: 'getWalletAdmin'): TypedContractMethod<
       [],
       [WalletX.WalletStructOutput],
       'view'
