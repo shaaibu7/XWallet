@@ -6,6 +6,16 @@ import type { TypedContractEvent, TypedDeferredTopicFilter, TypedEventLog, Typed
   
 export declare namespace WalletX {
       
+    export type WalletMemberStruct = {memberAddress: AddressLike, adminAddress: AddressLike, organizationName: string, name: string, active: boolean, spendLimit: BigNumberish, memberIdentifier: BigNumberish, role: string}
+
+    export type WalletMemberStructOutput = [memberAddress: string, adminAddress: string, organizationName: string, name: string, active: boolean, spendLimit: bigint, memberIdentifier: bigint, role: string] & {memberAddress: string, adminAddress: string, organizationName: string, name: string, active: boolean, spendLimit: bigint, memberIdentifier: bigint, role: string }
+  
+
+    export type MemberTransactionStruct = {amount: BigNumberish, reciever: AddressLike}
+
+    export type MemberTransactionStructOutput = [amount: bigint, reciever: string] & {amount: bigint, reciever: string }
+  
+
     export type WalletStruct = {adminAddress: AddressLike, walletName: string, active: boolean, walletId: BigNumberish, walletBalance: BigNumberish, role: string}
 
     export type WalletStructOutput = [adminAddress: string, walletName: string, active: boolean, walletId: bigint, walletBalance: bigint, role: string] & {adminAddress: string, walletName: string, active: boolean, walletId: bigint, walletBalance: bigint, role: string }
@@ -13,11 +23,14 @@ export declare namespace WalletX {
     }
 
   export interface WalletXInterface extends Interface {
-    getFunction(nameOrSignature: "getAdminRole" | "getWalletAdmin" | "onboardMembers" | "registerWallet" | "reimburseMember" | "reimburseWallet"): FunctionFragment;
+    getFunction(nameOrSignature: "getAdminRole" | "getMember" | "getMemberTransactions" | "getMembers" | "getWalletAdmin" | "onboardMembers" | "registerWallet" | "reimburseMember" | "reimburseWallet"): FunctionFragment;
 
     
 
     encodeFunctionData(functionFragment: 'getAdminRole', values: [AddressLike]): string;
+encodeFunctionData(functionFragment: 'getMember', values?: undefined): string;
+encodeFunctionData(functionFragment: 'getMemberTransactions', values: [AddressLike]): string;
+encodeFunctionData(functionFragment: 'getMembers', values?: undefined): string;
 encodeFunctionData(functionFragment: 'getWalletAdmin', values?: undefined): string;
 encodeFunctionData(functionFragment: 'onboardMembers', values: [AddressLike, string, BigNumberish, BigNumberish]): string;
 encodeFunctionData(functionFragment: 'registerWallet', values: [string, BigNumberish]): string;
@@ -25,6 +38,9 @@ encodeFunctionData(functionFragment: 'reimburseMember', values: [BigNumberish, B
 encodeFunctionData(functionFragment: 'reimburseWallet', values: [BigNumberish]): string;
 
     decodeFunctionResult(functionFragment: 'getAdminRole', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'getMember', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'getMemberTransactions', data: BytesLike): Result;
+decodeFunctionResult(functionFragment: 'getMembers', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'getWalletAdmin', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'onboardMembers', data: BytesLike): Result;
 decodeFunctionResult(functionFragment: 'registerWallet', data: BytesLike): Result;
@@ -76,6 +92,30 @@ decodeFunctionResult(functionFragment: 'reimburseWallet', data: BytesLike): Resu
     
 
     
+    getMember: TypedContractMethod<
+      [],
+      [WalletX.WalletMemberStructOutput],
+      'view'
+    >
+    
+
+    
+    getMemberTransactions: TypedContractMethod<
+      [_memberAddress: AddressLike, ],
+      [WalletX.MemberTransactionStructOutput[]],
+      'view'
+    >
+    
+
+    
+    getMembers: TypedContractMethod<
+      [],
+      [WalletX.WalletMemberStructOutput[]],
+      'view'
+    >
+    
+
+    
     getWalletAdmin: TypedContractMethod<
       [],
       [WalletX.WalletStructOutput],
@@ -121,6 +161,21 @@ decodeFunctionResult(functionFragment: 'reimburseWallet', data: BytesLike): Resu
     getFunction(nameOrSignature: 'getAdminRole'): TypedContractMethod<
       [_userAddress: AddressLike, ],
       [string],
+      'view'
+    >;
+getFunction(nameOrSignature: 'getMember'): TypedContractMethod<
+      [],
+      [WalletX.WalletMemberStructOutput],
+      'view'
+    >;
+getFunction(nameOrSignature: 'getMemberTransactions'): TypedContractMethod<
+      [_memberAddress: AddressLike, ],
+      [WalletX.MemberTransactionStructOutput[]],
+      'view'
+    >;
+getFunction(nameOrSignature: 'getMembers'): TypedContractMethod<
+      [],
+      [WalletX.WalletMemberStructOutput[]],
       'view'
     >;
 getFunction(nameOrSignature: 'getWalletAdmin'): TypedContractMethod<
