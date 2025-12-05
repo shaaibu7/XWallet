@@ -80,7 +80,7 @@ MetaMask / WalletConnect --- Blockchain Network (EVM)
 
 1. **Clone the Repo**
    ```bash
-   git clone https://github.com/yourusername/xwallet.git
+   git clone https://github.com/shaaibu7/XWallet.git
    cd xwallet
    cd frontend
    npm install
