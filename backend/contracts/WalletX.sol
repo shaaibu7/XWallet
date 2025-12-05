@@ -159,4 +159,18 @@ contract WalletX {
         userRole = walletAdmin[_userAddress].role;
 
     }
+
+     function getMembers() onlyAdmin() external view returns(WalletMember[] memory members) {
+        members = walletOrganisationMembers[msg.sender];
+    }
+
+    function getMember() external view returns(WalletMember memory member) {
+        member = walletMember[msg.sender];
+    }
+
+     function getMemberTransactions(address _memberAddress) external view returns(memberTransaction[] memory memberTxs) {
+        memberTxs = memberTransactions[_memberAddress];
+    }
+
+    
 }
