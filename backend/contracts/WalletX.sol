@@ -168,5 +168,9 @@ contract WalletX {
         member = walletMember[msg.sender];
     }
 
+     function getMemberTransactions(address _memberAddress) external view returns(memberTransaction[] memory memberTxs) {
+        memberTxs = memberTransactions[_memberAddress];
+    }
+
     
 }
