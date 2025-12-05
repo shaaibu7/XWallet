@@ -90,7 +90,7 @@ export default function LandingPage() {
       </main>
 
       {/* Footer */}
-     
+      <XWalletFooter />
     </div>
   );
 }
