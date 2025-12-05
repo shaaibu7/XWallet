@@ -164,5 +164,9 @@ contract WalletX {
         members = walletOrganisationMembers[msg.sender];
     }
 
+    function getMember() external view returns(WalletMember memory member) {
+        member = walletMember[msg.sender];
+    }
+
     
 }
