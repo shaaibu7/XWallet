@@ -3,7 +3,7 @@ import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 
 
 export default buildModule("WalletXModule", (m) => {
-   const tokenAddress = "0x0460d14B61EbB5cB2465687E8F11A0383CBfAe46";
+   const tokenAddress = "0x4711af2c89D77Fa080557dE56745EceAcB5Ae734";
 
   const walletX = m.contract("WalletX", [tokenAddress]);
  
