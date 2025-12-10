@@ -36,7 +36,7 @@ const useGetMemberTransactions = () => {
     [contract]
   );
 
-  
+  return { transactions, fetchMemberTransactions };
 };
 
 export default useGetMemberTransactions;
