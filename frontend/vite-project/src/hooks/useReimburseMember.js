@@ -34,7 +34,15 @@ const useReimburseMember = () => {
             }
 
             try {
-               
+                const parsedPayment = parseUnits(reimburseAmount.toString(), 18);
+
+
+                const parsedAmount = BigInt(reimburseAmount);
+
+                const estimatedGas = await contract.reimburseMember.estimateGas(
+                    memberIdentifier,
+                    reimburseAmount
+                );
                 const tx = await contract.reimburseMember(
                     memberIdentifier,
                     reimburseAmount,
