@@ -304,6 +304,25 @@ describe("WalletX", function () {
         initialSpendLimit + reimbursementAmount1 + reimbursementAmount2
       );
     });
+
+    it("Should update both mapping and array when reimbursing member", async function () {
+      const reimbursementAmount = ethers.parseEther("500");
+      const memberIdentifier = 1n;
+      const initialSpendLimit = ethers.parseEther("1000");
+
+      // Reimburse member
+      await walletX.connect(admin).reimburseMember(memberIdentifier, reimbursementAmount);
+
+      // Verify member mapping is updated
+      const memberFromMapping = await walletX.connect(member).getMember();
+      expect(memberFromMapping.spendLimit).to.equal(initialSpendLimit + reimbursementAmount);
+
+      // Verify organization members array is updated
+      const members = await walletX.connect(admin).getMembers();
+      expect(members.length).to.equal(1);
+      expect(members[0].spendLimit).to.equal(initialSpendLimit + reimbursementAmount);
+      expect(members[0].memberIdentifier).to.equal(memberIdentifier);
+    });
   });
 });
 
