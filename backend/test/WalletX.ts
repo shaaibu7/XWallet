@@ -285,6 +285,25 @@ describe("WalletX", function () {
         walletX.connect(otherAccount).reimburseMember(memberIdentifier, reimbursementAmount)
       ).to.be.revertedWith("Not a wallet admin account");
     });
+
+    it("Should allow multiple reimbursements for the same member", async function () {
+      const reimbursementAmount1 = ethers.parseEther("200");
+      const reimbursementAmount2 = ethers.parseEther("300");
+      const memberIdentifier = 1n;
+      const initialSpendLimit = ethers.parseEther("1000");
+
+      // First reimbursement
+      await walletX.connect(admin).reimburseMember(memberIdentifier, reimbursementAmount1);
+
+      // Second reimbursement
+      await walletX.connect(admin).reimburseMember(memberIdentifier, reimbursementAmount2);
+
+      // Verify total spend limit
+      const member = await walletX.connect(member).getMember();
+      expect(member.spendLimit).to.equal(
+        initialSpendLimit + reimbursementAmount1 + reimbursementAmount2
+      );
+    });
   });
 });
 
