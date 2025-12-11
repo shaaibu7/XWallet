@@ -276,6 +276,15 @@ describe("WalletX", function () {
         walletX.connect(admin).reimburseMember(memberIdentifier, reimbursementAmount)
       ).to.be.revertedWithCustomError(walletX, "InsufficientFunds");
     });
+
+    it("Should fail if called by non-admin", async function () {
+      const reimbursementAmount = ethers.parseEther("500");
+      const memberIdentifier = 1n;
+
+      await expect(
+        walletX.connect(otherAccount).reimburseMember(memberIdentifier, reimbursementAmount)
+      ).to.be.revertedWith("Not a wallet admin account");
+    });
   });
 });
 
