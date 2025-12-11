@@ -387,5 +387,58 @@ describe("WalletX", function () {
       expect(role).to.equal("");
     });
   });
+
+  describe("getMembers", function () {
+    beforeEach(async function () {
+      // Setup: Register a wallet for admin
+      const walletName = "Test Organization";
+      const fundAmount = ethers.parseEther("10000");
+      await mockERC20.connect(admin).approve(await walletX.getAddress(), fundAmount);
+      await walletX.connect(admin).registerWallet(walletName, fundAmount);
+    });
+
+    it("Should return empty array when no members are onboarded", async function () {
+      const members = await walletX.connect(admin).getMembers();
+      expect(members.length).to.equal(0);
+    });
+
+    it("Should return all organization members", async function () {
+      // Onboard first member
+      const memberName1 = "John Doe";
+      const memberFundAmount1 = ethers.parseEther("1000");
+      const memberIdentifier1 = 1n;
+      await walletX.connect(admin).onboardMembers(
+        member.address,
+        memberName1,
+        memberFundAmount1,
+        memberIdentifier1
+      );
+
+      // Onboard second member
+      const memberName2 = "Jane Smith";
+      const memberFundAmount2 = ethers.parseEther("2000");
+      const memberIdentifier2 = 2n;
+      await walletX.connect(admin).onboardMembers(
+        otherAccount.address,
+        memberName2,
+        memberFundAmount2,
+        memberIdentifier2
+      );
+
+      // Get all members
+      const members = await walletX.connect(admin).getMembers();
+      expect(members.length).to.equal(2);
+      expect(members[0].name).to.equal(memberName1);
+      expect(members[0].memberAddress).to.equal(member.address);
+      expect(members[1].name).to.equal(memberName2);
+      expect(members[1].memberAddress).to.equal(otherAccount.address);
+    });
+
+    it("Should fail if called by non-admin", async function () {
+      await expect(
+        walletX.connect(otherAccount).getMembers()
+      ).to.be.revertedWith("Not a wallet admin account");
+    });
+  });
 });
 
