@@ -58,7 +58,14 @@ const useReimburseWallet = () => {
                         gasLimit: (estimatedGas * BigInt(120)) / BigInt(100),
                     }
                 );
-                
+                const reciept = await tx.wait();
+
+
+                if (reciept.status === 1) {
+                    toast.success("Reimburse wallet successful");
+                    return;
+                }
+                toast.error("Reimburse wallet failed");
                 return;
             } catch (error) {
                 console.trace(error)
