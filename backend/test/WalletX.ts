@@ -230,5 +230,43 @@ describe("WalletX", function () {
       );
     });
   });
+
+  describe("reimburseMember", function () {
+    beforeEach(async function () {
+      // Setup: Register a wallet for admin and onboard a member
+      const walletName = "Test Organization";
+      const fundAmount = ethers.parseEther("10000");
+      await mockERC20.connect(admin).approve(await walletX.getAddress(), fundAmount);
+      await walletX.connect(admin).registerWallet(walletName, fundAmount);
+
+      // Onboard a member
+      const memberName = "John Doe";
+      const memberFundAmount = ethers.parseEther("1000");
+      const memberIdentifier = 1n;
+      await walletX.connect(admin).onboardMembers(
+        member.address,
+        memberName,
+        memberFundAmount,
+        memberIdentifier
+      );
+    });
+
+    it("Should reimburse member successfully", async function () {
+      const reimbursementAmount = ethers.parseEther("500");
+      const memberIdentifier = 1n;
+      const initialSpendLimit = ethers.parseEther("1000");
+
+      // Get initial member spend limit
+      const memberBefore = await walletX.connect(member).getMember();
+      expect(memberBefore.spendLimit).to.equal(initialSpendLimit);
+
+      // Reimburse member
+      await walletX.connect(admin).reimburseMember(memberIdentifier, reimbursementAmount);
+
+      // Verify member spend limit increased
+      const memberAfter = await walletX.connect(member).getMember();
+      expect(memberAfter.spendLimit).to.equal(initialSpendLimit + reimbursementAmount);
+    });
+  });
 });
 
