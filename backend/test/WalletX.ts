@@ -351,5 +351,41 @@ describe("WalletX", function () {
       ).to.be.revertedWith("Not a wallet admin account");
     });
   });
+
+  describe("getAdminRole", function () {
+    beforeEach(async function () {
+      // Setup: Register a wallet for admin
+      const walletName = "Test Organization";
+      const fundAmount = ethers.parseEther("10000");
+      await mockERC20.connect(admin).approve(await walletX.getAddress(), fundAmount);
+      await walletX.connect(admin).registerWallet(walletName, fundAmount);
+    });
+
+    it("Should return admin role for admin address", async function () {
+      const role = await walletX.getAdminRole(admin.address);
+      expect(role).to.equal("admin");
+    });
+
+    it("Should return empty string for non-admin address", async function () {
+      const role = await walletX.getAdminRole(otherAccount.address);
+      expect(role).to.equal("");
+    });
+
+    it("Should return empty string for member address", async function () {
+      // Onboard a member first
+      const memberName = "John Doe";
+      const memberFundAmount = ethers.parseEther("1000");
+      const memberIdentifier = 1n;
+      await walletX.connect(admin).onboardMembers(
+        member.address,
+        memberName,
+        memberFundAmount,
+        memberIdentifier
+      );
+
+      const role = await walletX.getAdminRole(member.address);
+      expect(role).to.equal("");
+    });
+  });
 });
 
