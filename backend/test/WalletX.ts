@@ -440,5 +440,51 @@ describe("WalletX", function () {
       ).to.be.revertedWith("Not a wallet admin account");
     });
   });
+
+  describe("getMember", function () {
+    beforeEach(async function () {
+      // Setup: Register a wallet for admin and onboard a member
+      const walletName = "Test Organization";
+      const fundAmount = ethers.parseEther("10000");
+      await mockERC20.connect(admin).approve(await walletX.getAddress(), fundAmount);
+      await walletX.connect(admin).registerWallet(walletName, fundAmount);
+
+      const memberName = "John Doe";
+      const memberFundAmount = ethers.parseEther("1000");
+      const memberIdentifier = 1n;
+      await walletX.connect(admin).onboardMembers(
+        member.address,
+        memberName,
+        memberFundAmount,
+        memberIdentifier
+      );
+    });
+
+    it("Should return member data successfully", async function () {
+      const memberData = await walletX.connect(member).getMember();
+
+      expect(memberData.memberAddress).to.equal(member.address);
+      expect(memberData.adminAddress).to.equal(admin.address);
+      expect(memberData.organizationName).to.equal("Test Organization");
+      expect(memberData.name).to.equal("John Doe");
+      expect(memberData.active).to.be.true;
+      expect(memberData.spendLimit).to.equal(ethers.parseEther("1000"));
+      expect(memberData.memberIdentifier).to.equal(1n);
+      expect(memberData.role).to.equal("member");
+    });
+
+    it("Should return empty/default values for non-member address", async function () {
+      const memberData = await walletX.connect(otherAccount).getMember();
+
+      expect(memberData.memberAddress).to.equal(ethers.ZeroAddress);
+      expect(memberData.adminAddress).to.equal(ethers.ZeroAddress);
+      expect(memberData.organizationName).to.equal("");
+      expect(memberData.name).to.equal("");
+      expect(memberData.active).to.be.false;
+      expect(memberData.spendLimit).to.equal(0n);
+      expect(memberData.memberIdentifier).to.equal(0n);
+      expect(memberData.role).to.equal("");
+    });
+  });
 });
 
