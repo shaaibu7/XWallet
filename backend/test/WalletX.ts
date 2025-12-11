@@ -267,6 +267,15 @@ describe("WalletX", function () {
       const memberAfter = await walletX.connect(member).getMember();
       expect(memberAfter.spendLimit).to.equal(initialSpendLimit + reimbursementAmount);
     });
+
+    it("Should fail if wallet balance is insufficient", async function () {
+      const reimbursementAmount = ethers.parseEther("20000"); // More than wallet balance
+      const memberIdentifier = 1n;
+
+      await expect(
+        walletX.connect(admin).reimburseMember(memberIdentifier, reimbursementAmount)
+      ).to.be.revertedWithCustomError(walletX, "InsufficientFunds");
+    });
   });
 });
 
