@@ -158,5 +158,77 @@ describe("WalletX", function () {
       expect(members[0].name).to.equal(memberName);
     });
   });
+
+  describe("reimburseWallet", function () {
+    beforeEach(async function () {
+      // Setup: Register a wallet for admin
+      const walletName = "Test Organization";
+      const fundAmount = ethers.parseEther("10000");
+      await mockERC20.connect(admin).approve(await walletX.getAddress(), fundAmount);
+      await walletX.connect(admin).registerWallet(walletName, fundAmount);
+    });
+
+    it("Should reimburse wallet successfully", async function () {
+      const reimbursementAmount = ethers.parseEther("5000");
+      const initialBalance = ethers.parseEther("10000");
+
+      // Get initial balance
+      const walletBefore = await walletX.connect(admin).getWalletAdmin();
+      expect(walletBefore.walletBalance).to.equal(initialBalance);
+
+      // Approve tokens for reimbursement
+      await mockERC20.connect(admin).approve(await walletX.getAddress(), reimbursementAmount);
+
+      // Reimburse wallet
+      await walletX.connect(admin).reimburseWallet(reimbursementAmount);
+
+      // Verify wallet balance increased
+      const walletAfter = await walletX.connect(admin).getWalletAdmin();
+      expect(walletAfter.walletBalance).to.equal(initialBalance + reimbursementAmount);
+    });
+
+    it("Should fail if allowance is insufficient", async function () {
+      const reimbursementAmount = ethers.parseEther("5000");
+      const insufficientAmount = ethers.parseEther("2000");
+
+      // Approve less than required
+      await mockERC20.connect(admin).approve(await walletX.getAddress(), insufficientAmount);
+
+      // Try to reimburse with more than approved - should fail
+      await expect(
+        walletX.connect(admin).reimburseWallet(reimbursementAmount)
+      ).to.be.revertedWith("No allowance to spend funds at the moment");
+    });
+
+    it("Should fail if called by non-admin", async function () {
+      const reimbursementAmount = ethers.parseEther("5000");
+
+      await mockERC20.connect(otherAccount).approve(await walletX.getAddress(), reimbursementAmount);
+
+      await expect(
+        walletX.connect(otherAccount).reimburseWallet(reimbursementAmount)
+      ).to.be.revertedWith("Not a wallet admin account");
+    });
+
+    it("Should allow multiple reimbursements", async function () {
+      const reimbursementAmount1 = ethers.parseEther("2000");
+      const reimbursementAmount2 = ethers.parseEther("3000");
+      const initialBalance = ethers.parseEther("10000");
+
+      // First reimbursement
+      await mockERC20.connect(admin).approve(await walletX.getAddress(), reimbursementAmount1);
+      await walletX.connect(admin).reimburseWallet(reimbursementAmount1);
+
+      // Second reimbursement
+      await mockERC20.connect(admin).approve(await walletX.getAddress(), reimbursementAmount2);
+      await walletX.connect(admin).reimburseWallet(reimbursementAmount2);
+
+      // Verify total balance
+      const wallet = await walletX.connect(admin).getWalletAdmin();
+      expect(wallet.walletBalance).to.equal(
+        initialBalance + reimbursementAmount1 + reimbursementAmount2
+      );
+    });
+  });
 });
 
