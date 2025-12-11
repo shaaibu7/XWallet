@@ -76,5 +76,87 @@ describe("WalletX", function () {
       ).to.be.revertedWith("No allowance to spend funds at the moment");
     });
   });
+
+  describe("onboardMembers", function () {
+    beforeEach(async function () {
+      // Setup: Register a wallet for admin
+      const walletName = "Test Organization";
+      const fundAmount = ethers.parseEther("10000");
+      await mockERC20.connect(admin).approve(await walletX.getAddress(), fundAmount);
+      await walletX.connect(admin).registerWallet(walletName, fundAmount);
+    });
+
+    it("Should onboard a member successfully", async function () {
+      const memberName = "John Doe";
+      const fundAmount = ethers.parseEther("1000");
+      const memberIdentifier = 1n;
+
+      await walletX.connect(admin).onboardMembers(
+        member.address,
+        memberName,
+        fundAmount,
+        memberIdentifier
+      );
+
+      // Verify member was onboarded
+      const memberData = await walletX.connect(member).getMember();
+      expect(memberData.memberAddress).to.equal(member.address);
+      expect(memberData.adminAddress).to.equal(admin.address);
+      expect(memberData.name).to.equal(memberName);
+      expect(memberData.active).to.be.true;
+      expect(memberData.spendLimit).to.equal(fundAmount);
+      expect(memberData.memberIdentifier).to.equal(memberIdentifier);
+      expect(memberData.role).to.equal("member");
+    });
+
+    it("Should fail if wallet balance is insufficient", async function () {
+      const memberName = "John Doe";
+      const fundAmount = ethers.parseEther("20000"); // More than wallet balance
+      const memberIdentifier = 1n;
+
+      await expect(
+        walletX.connect(admin).onboardMembers(
+          member.address,
+          memberName,
+          fundAmount,
+          memberIdentifier
+        )
+      ).to.be.revertedWithCustomError(walletX, "InsufficientFunds");
+    });
+
+    it("Should fail if called by non-admin", async function () {
+      const memberName = "John Doe";
+      const fundAmount = ethers.parseEther("1000");
+      const memberIdentifier = 1n;
+
+      await expect(
+        walletX.connect(otherAccount).onboardMembers(
+          member.address,
+          memberName,
+          fundAmount,
+          memberIdentifier
+        )
+      ).to.be.revertedWith("Not a wallet admin account");
+    });
+
+    it("Should add member to organization members list", async function () {
+      const memberName = "John Doe";
+      const fundAmount = ethers.parseEther("1000");
+      const memberIdentifier = 1n;
+
+      await walletX.connect(admin).onboardMembers(
+        member.address,
+        memberName,
+        fundAmount,
+        memberIdentifier
+      );
+
+      // Verify member is in organization members list
+      const members = await walletX.connect(admin).getMembers();
+      expect(members.length).to.equal(1);
+      expect(members[0].memberAddress).to.equal(member.address);
+      expect(members[0].name).to.equal(memberName);
+    });
+  });
 });
 
