@@ -38,7 +38,24 @@ const useOnboardMember = () => {
             }
 
             try {
-               
+                const parsedAmount = BigInt(fundAmount);
+
+                const estimatedGas = await contract.onboardMembers.estimateGas(
+                    walletAddress,
+                    memberName,
+                    fundAmount,
+                    memberId,
+                );
+                const tx = await contract.onboardMembers(
+                    walletAddress,
+                    memberName,
+                    fundAmount,
+                    memberId,
+                    {
+                        gasLimit: (estimatedGas * BigInt(120)) / BigInt(100),
+                    }
+                );
+                const reciept = await tx.wait();
 
 
                 if (reciept.status === 1) {
