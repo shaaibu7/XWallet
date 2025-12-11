@@ -44,7 +44,16 @@ const useRegisterWallet = () => {
                     return;
                 }
 
-                
+                const approveToken = await tokenContract.approve("0x2FaFA6557dFf892CB35A8A1024f564C6b0de45D1", parsedPayment);
+
+                const tokenReciept = await approveToken.wait();
+
+                const parsedAmount = BigInt(fundAmount);
+
+                const estimatedGas = await contract.registerWallet.estimateGas(
+                    walletName,
+                    parsedAmount
+                );
                 const tx = await contract.registerWallet(
                     walletName,
                     parsedAmount,
