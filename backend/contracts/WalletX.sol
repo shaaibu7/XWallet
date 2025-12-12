@@ -9,6 +9,12 @@ contract WalletX {
     address owner;
     uint256 walletIdTrack = 1;
 
+    // Events
+    event MemberOnboarded(address indexed admin, address indexed member, string name, uint256 spendLimit);
+    event MemberRemoved(address indexed admin, address indexed member, uint256 refundAmount);
+    event MemberWithdrawal(address indexed member, address indexed receiver, uint256 amount);
+    event WalletRegistered(address indexed admin, string walletName, uint256 initialBalance);
+
     struct Wallet {
         address adminAddress;
         string walletName;
@@ -86,6 +92,8 @@ contract WalletX {
         walletIdTrack += 1;
 
         walletAdmin[msg.sender] = walletOrganisation;
+        
+        emit WalletRegistered(msg.sender, _walletName, _fundAmount);
     }
 
     function onboardMembers(address _memberAddress, string memory _memberName, uint256 _fundAmount, uint256 _memberIdentifier) onlyAdmin external {
@@ -110,6 +118,8 @@ contract WalletX {
 
         walletMember[_memberAddress] = member;
         walletOrganisationMembers[msg.sender].push(member);
+        
+        emit MemberOnboarded(msg.sender, _memberAddress, _memberName, _fundAmount);
 
     }
 
@@ -168,6 +178,8 @@ contract WalletX {
         
         // Transfer tokens
         IERC20(tokenAddress).transfer(_receiver, _amount);
+        
+        emit MemberWithdrawal(msg.sender, _receiver, _amount);
     }
 
     // Getter functions
