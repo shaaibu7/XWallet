@@ -1,5 +1,4 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { appkit } from "../connection";
 import XWalletHeader from "../layout/component/XWalletHeader";
 import XWalletFooter from "../layout/component/XWalletFooter";
 import Home from "../pages/home/Home";

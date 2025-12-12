@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useState } from "react";
-import logo from "../../assets/logo.png";
 import { IconSun, IconMoon } from "@tabler/icons-react";
 import { motion } from "framer-motion";
 import { NavLink } from "react-router-dom";
@@ -79,7 +78,6 @@ const XWalletHeader = () => {
           transition={{ duration: 0.5 }}
           className="text-2xl font-bold text-primary flex items-center"
         >
-          <img src={logo} alt="XWALLET LOGO" className="w-[80px] h-[90px]" />
           XWallet
         </motion.h1>
         <nav className="space-x-6 hidden md:flex">

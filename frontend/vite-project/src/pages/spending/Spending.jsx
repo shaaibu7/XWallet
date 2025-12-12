@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import useMemberWithdrawal from "../../hooks/useMemberWithdrawal";
-import useGetMemberTransactions from "../../hooks/useGetMemberTransactions";
+import useGetMemberTransaction from "../../hooks/useGetMemberTransaction";
 import { IconLoader, IconEye } from "@tabler/icons-react"; // Added IconEye
 import { useAppKitAccount } from "@reown/appkit/react";
 
@@ -11,7 +11,7 @@ const Spending = () => {
   const [transactionHistory, setTransactionHistory] = useState([]);
   const [showFullAddress, setShowFullAddress] = useState({}); // State to track toggled addresses
   const memberWithdrawal = useMemberWithdrawal();
-  const { fetchMemberTransactions } = useGetMemberTransactions();
+  const { fetchMemberTransactions } = useGetMemberTransaction();
 
   const { address } = useAppKitAccount();
 
