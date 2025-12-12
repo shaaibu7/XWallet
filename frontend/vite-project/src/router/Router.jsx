@@ -16,6 +16,7 @@ import OnboardMembers from "../pages/onboardMembers/OnboardMember";
 import ReimburseOrganization from "../pages/reimburseOrganization/ReimburseOrganization";
 import ReimburseMember from "../pages/reimburseMember/ReimburseMember";
 import Spending from "../pages/spending/Spending";
+import MemberManagement from "../pages/memberManagement/MemberManagement";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -32,6 +33,7 @@ const router = createBrowserRouter(
         <Route path="reimburse-org" element={<ReimburseOrganization />} />
         <Route path="reimburse-member" element={<ReimburseMember />} />
         <Route path="spending" element={<Spending />} />
+        <Route path="member-management" element={<MemberManagement />} />
         {/* <Route path="*" element={<NotFound />} /> */}
       </Route>
     </Route>

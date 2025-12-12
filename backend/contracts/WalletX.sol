@@ -14,6 +14,8 @@ contract WalletX {
     event MemberRemoved(address indexed admin, address indexed member, uint256 refundAmount);
     event MemberWithdrawal(address indexed member, address indexed receiver, uint256 amount);
     event WalletRegistered(address indexed admin, string walletName, uint256 initialBalance);
+    event MemberFrozen(address indexed admin, address indexed member);
+    event MemberUnfrozen(address indexed admin, address indexed member);
 
     struct Wallet {
         address adminAddress;
@@ -30,6 +32,7 @@ contract WalletX {
         string organizationName;
         string name;
         bool active;
+        bool frozen;
         uint256 spendLimit;
         uint256 memberIdentifier;
         string role;
@@ -111,6 +114,7 @@ contract WalletX {
             organizationName: _organizationName,
             name: _memberName,
             active: true,
+            frozen: false,
             spendLimit: _fundAmount,
             memberIdentifier: _memberIdentifier,
             role: "member"
@@ -145,7 +149,7 @@ contract WalletX {
         WalletMember[] storage members = walletOrganisationMembers[msg.sender];
 
         for(uint256 i = 0; i < members.length; i++) {
-            if (members[i].memberIdentifier == _memberIdentifier && members[i].active) {
+            if (members[i].memberIdentifier == _memberIdentifier && members[i].active && !members[i].frozen) {
                 members[i].spendLimit += _amount;
                 walletMember[members[i].memberAddress].spendLimit += _amount;
                 walletAdmin[msg.sender].walletBalance -= _amount;
@@ -158,6 +162,7 @@ contract WalletX {
     function memberWithdrawal(uint256 _amount, address _receiver) external {
         WalletMember storage member = walletMember[msg.sender];
         require(member.active, "Member account is not active");
+        require(!member.frozen, "Member account is frozen");
         require(member.spendLimit >= _amount, "Insufficient spend limit");
         
         // Update member spend limit
@@ -213,6 +218,48 @@ contract WalletX {
         }
         
         emit MemberRemoved(msg.sender, _memberAddress, refundAmount);
+    }
+
+    function freezeMember(address _memberAddress) external onlyAdmin {
+        WalletMember storage member = walletMember[_memberAddress];
+        require(member.active, "Member is not active or does not exist");
+        require(member.adminAddress == msg.sender, "Not authorized to freeze this member");
+        require(!member.frozen, "Member is already frozen");
+        
+        // Freeze member
+        member.frozen = true;
+        
+        // Update organization member array
+        WalletMember[] storage orgMembers = walletOrganisationMembers[msg.sender];
+        for(uint256 i = 0; i < orgMembers.length; i++) {
+            if(orgMembers[i].memberAddress == _memberAddress) {
+                orgMembers[i].frozen = true;
+                break;
+            }
+        }
+        
+        emit MemberFrozen(msg.sender, _memberAddress);
+    }
+
+    function unfreezeMember(address _memberAddress) external onlyAdmin {
+        WalletMember storage member = walletMember[_memberAddress];
+        require(member.active, "Member is not active or does not exist");
+        require(member.adminAddress == msg.sender, "Not authorized to unfreeze this member");
+        require(member.frozen, "Member is not frozen");
+        
+        // Unfreeze member
+        member.frozen = false;
+        
+        // Update organization member array
+        WalletMember[] storage orgMembers = walletOrganisationMembers[msg.sender];
+        for(uint256 i = 0; i < orgMembers.length; i++) {
+            if(orgMembers[i].memberAddress == _memberAddress) {
+                orgMembers[i].frozen = false;
+                break;
+            }
+        }
+        
+        emit MemberUnfrozen(msg.sender, _memberAddress);
     }
 
     // Getter functions
