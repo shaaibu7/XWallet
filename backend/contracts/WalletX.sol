@@ -145,9 +145,11 @@ contract WalletX {
         WalletMember[] storage members = walletOrganisationMembers[msg.sender];
 
         for(uint256 i = 0; i < members.length; i++) {
-            if (members[i].memberIdentifier == _memberIdentifier) {
+            if (members[i].memberIdentifier == _memberIdentifier && members[i].active) {
                 members[i].spendLimit += _amount;
                 walletMember[members[i].memberAddress].spendLimit += _amount;
+                walletAdmin[msg.sender].walletBalance -= _amount;
+                break;
             }
         }
     }
@@ -177,7 +179,8 @@ contract WalletX {
         }));
         
         // Transfer tokens
-        IERC20(tokenAddress).transfer(_receiver, _amount);
+        bool success = IERC20(tokenAddress).transfer(_receiver, _amount);
+        require(success, "Token transfer failed");
         
         emit MemberWithdrawal(msg.sender, _receiver, _amount);
     }
@@ -231,6 +234,28 @@ contract WalletX {
 
      function getMembers() onlyAdmin() external view returns(WalletMember[] memory members) {
         members = walletOrganisationMembers[msg.sender];
+    }
+
+    function getActiveMembers() onlyAdmin() external view returns(WalletMember[] memory activeMembers) {
+        WalletMember[] memory allMembers = walletOrganisationMembers[msg.sender];
+        uint256 activeCount = 0;
+        
+        // Count active members
+        for(uint256 i = 0; i < allMembers.length; i++) {
+            if(allMembers[i].active) {
+                activeCount++;
+            }
+        }
+        
+        // Create array of active members
+        activeMembers = new WalletMember[](activeCount);
+        uint256 index = 0;
+        for(uint256 i = 0; i < allMembers.length; i++) {
+            if(allMembers[i].active) {
+                activeMembers[index] = allMembers[i];
+                index++;
+            }
+        }
     }
 
     function getMember() external view returns(WalletMember memory member) {
