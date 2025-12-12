@@ -3,11 +3,13 @@ import "react-toastify/dist/ReactToastify.css";
 import useContract from "../../hooks/useContract";
 import { useAppKitAccount } from "@reown/appkit/react";
 import useAdminRole from "../../hooks/useAdminRole";
+import useRemoveMember from "../../hooks/useRemoveMember";
+import { IconUserMinus } from "@tabler/icons-react";
 
 const Dashboard = () => {
   const { address: connectedWalletAddress } = useAppKitAccount();
   const { adminRole } = useAdminRole(connectedWalletAddress);
-  // console.log("Admin Role: ", adminRole);
+  const removeMember = useRemoveMember();
 
   const userRole = adminRole || "member";
   const [members, setMembers] = useState([]);
@@ -18,10 +20,7 @@ const Dashboard = () => {
     organizationName: "",
     memberSpendLimit: "",
   });
-
-  // console.log(members);
-  
-  // console.log("memberInfo: ", memberInfo);
+  const [removingMember, setRemovingMember] = useState(null);
   
   const [loading, setLoading] = useState(true);
 
@@ -85,6 +84,20 @@ const Dashboard = () => {
       console.log("Error fetching member info: ", error);
     }
   }, [readOnlyOnboardContract]);
+
+  const handleRemoveMember = async (memberAddress) => {
+    try {
+      setRemovingMember(memberAddress);
+      await removeMember(memberAddress);
+      // Refresh member list after successful removal
+      await fetchMembers();
+      await fetchWalletInfo(); // Refresh wallet info to show updated balance
+    } catch (error) {
+      console.error("Failed to remove member:", error);
+    } finally {
+      setRemovingMember(null);
+    }
+  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -204,9 +217,23 @@ const Dashboard = () => {
                 }}
               >
                 <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-[hsl(var(--foreground))] to-transparent opacity-10 pointer-events-none"></div>
-                <h4 className="font-medium text-[hsl(var(--foreground))] mb-2">
-                  {member.name}
-                </h4>
+                <div className="flex justify-between items-start mb-2">
+                  <h4 className="font-medium text-[hsl(var(--foreground))]">
+                    {member.name}
+                  </h4>
+                  <button
+                    onClick={() => handleRemoveMember(member.id)}
+                    disabled={removingMember === member.id}
+                    className="text-red-500 hover:text-red-700 disabled:opacity-50 p-1 rounded transition-colors"
+                    title="Remove Member"
+                  >
+                    {removingMember === member.id ? (
+                      <div className="animate-spin w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full"></div>
+                    ) : (
+                      <IconUserMinus size={16} />
+                    )}
+                  </button>
+                </div>
                 <p className="text-sm text-[hsl(var(--muted-text))] mb-1">
                   Role: Member
                 </p>
