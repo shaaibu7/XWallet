@@ -149,7 +149,7 @@ contract WalletX {
         WalletMember[] storage members = walletOrganisationMembers[msg.sender];
 
         for(uint256 i = 0; i < members.length; i++) {
-            if (members[i].memberIdentifier == _memberIdentifier && members[i].active) {
+            if (members[i].memberIdentifier == _memberIdentifier && members[i].active && !members[i].frozen) {
                 members[i].spendLimit += _amount;
                 walletMember[members[i].memberAddress].spendLimit += _amount;
                 walletAdmin[msg.sender].walletBalance -= _amount;
