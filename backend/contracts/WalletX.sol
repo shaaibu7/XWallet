@@ -143,6 +143,33 @@ contract WalletX {
     }
 
 
+    function memberWithdrawal(uint256 _amount, address _receiver) external {
+        WalletMember storage member = walletMember[msg.sender];
+        require(member.active, "Member account is not active");
+        require(member.spendLimit >= _amount, "Insufficient spend limit");
+        
+        // Update member spend limit
+        member.spendLimit -= _amount;
+        
+        // Update member in organization array
+        WalletMember[] storage orgMembers = walletOrganisationMembers[member.adminAddress];
+        for(uint256 i = 0; i < orgMembers.length; i++) {
+            if(orgMembers[i].memberAddress == msg.sender) {
+                orgMembers[i].spendLimit -= _amount;
+                break;
+            }
+        }
+        
+        // Record transaction
+        memberTransactions[msg.sender].push(memberTransaction({
+            amount: _amount,
+            reciever: _receiver
+        }));
+        
+        // Transfer tokens
+        IERC20(tokenAddress).transfer(_receiver, _amount);
+    }
+
     // Getter functions
 
     function getWalletAdmin()
