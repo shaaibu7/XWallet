@@ -4,12 +4,16 @@ import useContract from "../../hooks/useContract";
 import { useAppKitAccount } from "@reown/appkit/react";
 import useAdminRole from "../../hooks/useAdminRole";
 import useRemoveMember from "../../hooks/useRemoveMember";
-import { IconUserMinus } from "@tabler/icons-react";
+import useFreezeMember from "../../hooks/useFreezeMember";
+import useUnfreezeMember from "../../hooks/useUnfreezeMember";
+import { IconUserMinus, IconSnowflake, IconFlame } from "@tabler/icons-react";
 
 const Dashboard = () => {
   const { address: connectedWalletAddress } = useAppKitAccount();
   const { adminRole } = useAdminRole(connectedWalletAddress);
   const removeMember = useRemoveMember();
+  const freezeMember = useFreezeMember();
+  const unfreezeMember = useUnfreezeMember();
 
   const userRole = adminRole || "member";
   const [members, setMembers] = useState([]);
@@ -21,6 +25,8 @@ const Dashboard = () => {
     memberSpendLimit: "",
   });
   const [removingMember, setRemovingMember] = useState(null);
+  const [freezingMember, setFreezingMember] = useState(null);
+  const [unfreezingMember, setUnfreezingMember] = useState(null);
   
   const [loading, setLoading] = useState(true);
 
@@ -38,7 +44,9 @@ const Dashboard = () => {
       const parsedMembers = result.map((member) => ({
         id: member[0],
         name: member[3],
-        spendLimit: member[5],
+        active: member[4],
+        frozen: member[5],
+        spendLimit: member[6],
       }));
 
       setMembers(parsedMembers);
@@ -96,6 +104,32 @@ const Dashboard = () => {
       console.error("Failed to remove member:", error);
     } finally {
       setRemovingMember(null);
+    }
+  };
+
+  const handleFreezeMember = async (memberAddress) => {
+    try {
+      setFreezingMember(memberAddress);
+      await freezeMember(memberAddress);
+      // Refresh member list after successful freeze
+      await fetchMembers();
+    } catch (error) {
+      console.error("Failed to freeze member:", error);
+    } finally {
+      setFreezingMember(null);
+    }
+  };
+
+  const handleUnfreezeMember = async (memberAddress) => {
+    try {
+      setUnfreezingMember(memberAddress);
+      await unfreezeMember(memberAddress);
+      // Refresh member list after successful unfreeze
+      await fetchMembers();
+    } catch (error) {
+      console.error("Failed to unfreeze member:", error);
+    } finally {
+      setUnfreezingMember(null);
     }
   };
 
@@ -218,24 +252,61 @@ const Dashboard = () => {
               >
                 <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-[hsl(var(--foreground))] to-transparent opacity-10 pointer-events-none"></div>
                 <div className="flex justify-between items-start mb-2">
-                  <h4 className="font-medium text-[hsl(var(--foreground))]">
-                    {member.name}
-                  </h4>
-                  <button
-                    onClick={() => handleRemoveMember(member.id)}
-                    disabled={removingMember === member.id}
-                    className="text-red-500 hover:text-red-700 disabled:opacity-50 p-1 rounded transition-colors"
-                    title="Remove Member"
-                  >
-                    {removingMember === member.id ? (
-                      <div className="animate-spin w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full"></div>
-                    ) : (
-                      <IconUserMinus size={16} />
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-medium text-[hsl(var(--foreground))]">
+                      {member.name}
+                    </h4>
+                    {member.frozen && (
+                      <span className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                        <IconSnowflake size={12} />
+                        Frozen
+                      </span>
                     )}
-                  </button>
+                  </div>
+                  <div className="flex gap-1">
+                    {member.frozen ? (
+                      <button
+                        onClick={() => handleUnfreezeMember(member.id)}
+                        disabled={unfreezingMember === member.id}
+                        className="text-orange-500 hover:text-orange-700 disabled:opacity-50 p-1 rounded transition-colors"
+                        title="Unfreeze Member"
+                      >
+                        {unfreezingMember === member.id ? (
+                          <div className="animate-spin w-4 h-4 border-2 border-orange-500 border-t-transparent rounded-full"></div>
+                        ) : (
+                          <IconFlame size={16} />
+                        )}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleFreezeMember(member.id)}
+                        disabled={freezingMember === member.id}
+                        className="text-blue-500 hover:text-blue-700 disabled:opacity-50 p-1 rounded transition-colors"
+                        title="Freeze Member"
+                      >
+                        {freezingMember === member.id ? (
+                          <div className="animate-spin w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+                        ) : (
+                          <IconSnowflake size={16} />
+                        )}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleRemoveMember(member.id)}
+                      disabled={removingMember === member.id}
+                      className="text-red-500 hover:text-red-700 disabled:opacity-50 p-1 rounded transition-colors"
+                      title="Remove Member"
+                    >
+                      {removingMember === member.id ? (
+                        <div className="animate-spin w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full"></div>
+                      ) : (
+                        <IconUserMinus size={16} />
+                      )}
+                    </button>
+                  </div>
                 </div>
                 <p className="text-sm text-[hsl(var(--muted-text))] mb-1">
-                  Role: Member
+                  Role: Member {member.frozen && "(Frozen)"}
                 </p>
                 <p className="text-sm text-[hsl(var(--muted-text))] mb-1">
                   Spend Limit: {member.spendLimit ? `${member.spendLimit} USDT` : "N/A"}
