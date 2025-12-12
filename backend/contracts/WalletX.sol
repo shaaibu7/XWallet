@@ -182,6 +182,36 @@ contract WalletX {
         emit MemberWithdrawal(msg.sender, _receiver, _amount);
     }
 
+    function removeMember(address _memberAddress) external onlyAdmin {
+        WalletMember storage member = walletMember[_memberAddress];
+        require(member.active, "Member is not active or does not exist");
+        require(member.adminAddress == msg.sender, "Not authorized to remove this member");
+        
+        // Calculate refund amount (unused spend limit)
+        uint256 refundAmount = member.spendLimit;
+        
+        // Deactivate member
+        member.active = false;
+        member.spendLimit = 0;
+        
+        // Update organization member array
+        WalletMember[] storage orgMembers = walletOrganisationMembers[msg.sender];
+        for(uint256 i = 0; i < orgMembers.length; i++) {
+            if(orgMembers[i].memberAddress == _memberAddress) {
+                orgMembers[i].active = false;
+                orgMembers[i].spendLimit = 0;
+                break;
+            }
+        }
+        
+        // Return unused funds to organization wallet
+        if(refundAmount > 0) {
+            walletAdmin[msg.sender].walletBalance += refundAmount;
+        }
+        
+        emit MemberRemoved(msg.sender, _memberAddress, refundAmount);
+    }
+
     // Getter functions
 
     function getWalletAdmin()
