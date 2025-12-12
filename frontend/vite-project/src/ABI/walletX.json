@@ -1,0 +1,300 @@
+[
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_tokenAddress",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [],
+      "name": "InsufficientFunds",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_userAddress",
+          "type": "address"
+        }
+      ],
+      "name": "getAdminRole",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "userRole",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getMember",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "memberAddress",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "adminAddress",
+              "type": "address"
+            },
+            {
+              "internalType": "string",
+              "name": "organizationName",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "internalType": "bool",
+              "name": "active",
+              "type": "bool"
+            },
+            {
+              "internalType": "uint256",
+              "name": "spendLimit",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "memberIdentifier",
+              "type": "uint256"
+            },
+            {
+              "internalType": "string",
+              "name": "role",
+              "type": "string"
+            }
+          ],
+          "internalType": "struct WalletX.WalletMember",
+          "name": "member",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_memberAddress",
+          "type": "address"
+        }
+      ],
+      "name": "getMemberTransactions",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "amount",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "reciever",
+              "type": "address"
+            }
+          ],
+          "internalType": "struct WalletX.memberTransaction[]",
+          "name": "memberTxs",
+          "type": "tuple[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getMembers",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "memberAddress",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "adminAddress",
+              "type": "address"
+            },
+            {
+              "internalType": "string",
+              "name": "organizationName",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "internalType": "bool",
+              "name": "active",
+              "type": "bool"
+            },
+            {
+              "internalType": "uint256",
+              "name": "spendLimit",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "memberIdentifier",
+              "type": "uint256"
+            },
+            {
+              "internalType": "string",
+              "name": "role",
+              "type": "string"
+            }
+          ],
+          "internalType": "struct WalletX.WalletMember[]",
+          "name": "members",
+          "type": "tuple[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getWalletAdmin",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "adminAddress",
+              "type": "address"
+            },
+            {
+              "internalType": "string",
+              "name": "walletName",
+              "type": "string"
+            },
+            {
+              "internalType": "bool",
+              "name": "active",
+              "type": "bool"
+            },
+            {
+              "internalType": "uint256",
+              "name": "walletId",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "walletBalance",
+              "type": "uint256"
+            },
+            {
+              "internalType": "string",
+              "name": "role",
+              "type": "string"
+            }
+          ],
+          "internalType": "struct WalletX.Wallet",
+          "name": "admin",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_memberAddress",
+          "type": "address"
+        },
+        {
+          "internalType": "string",
+          "name": "_memberName",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_fundAmount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_memberIdentifier",
+          "type": "uint256"
+        }
+      ],
+      "name": "onboardMembers",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "_walletName",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_fundAmount",
+          "type": "uint256"
+        }
+      ],
+      "name": "registerWallet",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_memberIdentifier",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "reimburseMember",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "reimburseWallet",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ]
