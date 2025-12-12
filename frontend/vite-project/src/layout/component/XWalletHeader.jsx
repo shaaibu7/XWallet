@@ -109,8 +109,35 @@ const XWalletHeader = () => {
           )}
 
           {connectedWalletAddress && isAdminOrEmptyRole() && (
+            <>
+              <NavLink
+                to="/dashboard"
+                onClick={handleWalletNavigation}
+                className={({ isActive }) =>
+                  `font-semibold ${
+                    isActive ? "text-primary" : "hover:text-primary"
+                  }`
+                }
+              >
+                Dashboard
+              </NavLink>
+              <NavLink
+                to="/transaction-history"
+                onClick={handleWalletNavigation}
+                className={({ isActive }) =>
+                  `font-semibold ${
+                    isActive ? "text-primary" : "hover:text-primary"
+                  }`
+                }
+              >
+                Transactions
+              </NavLink>
+            </>
+          )}
+
+          {connectedWalletAddress && (
             <NavLink
-              to="/dashboard"
+              to="/spending"
               onClick={handleWalletNavigation}
               className={({ isActive }) =>
                 `font-semibold ${
@@ -118,7 +145,7 @@ const XWalletHeader = () => {
                 }`
               }
             >
-              Wallet
+              Spend
             </NavLink>
           )}
 
