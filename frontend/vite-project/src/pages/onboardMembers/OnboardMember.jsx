@@ -1,118 +1,153 @@
 import React, { useState } from "react";
 import { IconUserPlus, IconLoader } from "@tabler/icons-react";
-import { useNavigate } from "react-router-dom"; // Added import for navigation
+import { useNavigate } from "react-router-dom";
 import useOnboardMember from "../../hooks/useOnboardMember";
+import useFormValidation from "../../hooks/useFormValidation";
+import FormInput from "../../components/FormInput";
+import {
+  validateWalletAddress,
+  validateMemberName,
+  validateAmount,
+  validateMemberId,
+} from "../../utils/validation";
 
 const OnboardMembers = () => {
   const handleOnboardMember = useOnboardMember();
-  const navigate = useNavigate(); // Initialize navigation
-  const [member, setMember] = useState({
-    walletAddress: "",
-    memberName: "",
-    fundAmount: 0,
-    memberId: "",
-  });
+  const navigate = useNavigate();
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleInputChange = (name, e) => {
-    setMember((preState) => ({ ...preState, [name]: e.target.value }));
+  const validators = {
+    walletAddress: (value) => validateWalletAddress(value),
+    memberName: (value) => validateMemberName(value),
+    fundAmount: (value) =>
+      validateAmount(value, { min: 0.01, fieldName: "Spend limit" }),
+    memberId: (value) => validateMemberId(value),
   };
 
-  const { walletAddress, memberName, fundAmount, memberId } = member;
+  const {
+    errors,
+    touched,
+    handleFieldChange,
+    handleFieldBlur,
+    validateAll,
+    clearAllErrors,
+    getFieldError,
+    isFormValid,
+  } = useFormValidation(
+    {
+      walletAddress: "",
+      memberName: "",
+      fundAmount: "",
+      memberId: "",
+    },
+    validators
+  );
 
-   return (
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const formData = {
+      walletAddress: e.target.walletAddress.value.trim(),
+      memberName: e.target.memberName.value.trim(),
+      fundAmount: e.target.fundAmount.value,
+      memberId: e.target.memberId.value.trim(),
+    };
+
+    if (!validateAll(formData)) {
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      await handleOnboardMember(
+        formData.walletAddress,
+        formData.memberName,
+        formData.fundAmount,
+        formData.memberId
+      );
+      clearAllErrors();
+      e.target.reset();
+      navigate("/dashboard");
+    } catch (error) {
+      console.error("Error during onboarding: ", error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  return (
     <div className="max-w-xl mx-auto mt-10 bg-[hsl(var(--card))] p-8 rounded-xl border border-[hsl(var(--border))] shadow-md">
       <h2 className="text-2xl font-bold mb-6 text-[hsl(var(--foreground))] flex items-center gap-2">
         <IconUserPlus size={24} />
         Onboard Member
       </h2>
 
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm text-[hsl(var(--muted-text))] mb-1">
-            Member Wallet Address
-          </label>
-          <input
-            type="text"
-            value={walletAddress}
-            onChange={(e) => handleInputChange("walletAddress", e)}
-            placeholder="0x..."
-            className="w-full px-4 py-2 rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--input))] text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-text))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary)/0.4)]"
-          />
-        </div>
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <FormInput
+          label="Member Wallet Address"
+          name="walletAddress"
+          type="text"
+          placeholder="0x..."
+          onChange={(e) => handleFieldChange("walletAddress", e.target.value)}
+          onBlur={() => handleFieldBlur("walletAddress")}
+          error={getFieldError("walletAddress")}
+          touched={touched.walletAddress}
+          required
+          helperText="Must be a valid Ethereum address"
+        />
 
-        <div>
-          <label className="block text-sm text-[hsl(var(--muted-text))] mb-1">
-            Member Name
-          </label>
-          <input
-            type="text"
-            value={memberName}
-            onChange={(e) => handleInputChange("memberName", e)}
-            placeholder="John Doe"
-            className="w-full px-4 py-2 rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--input))] text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-text))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary)/0.4)]"
-          />
-        </div>
+        <FormInput
+          label="Member Name"
+          name="memberName"
+          type="text"
+          placeholder="John Doe"
+          onChange={(e) => handleFieldChange("memberName", e.target.value)}
+          onBlur={() => handleFieldBlur("memberName")}
+          error={getFieldError("memberName")}
+          touched={touched.memberName}
+          required
+          maxLength={50}
+          helperText="2-50 characters"
+        />
 
-        <div>
-          <label className="block text-sm text-[hsl(var(--muted-text))] mb-1">
-            Spend Limit
-          </label>
-          <input
-            type="number"
-            value={fundAmount}
-            onChange={(e) => handleInputChange("fundAmount", e)}
-            placeholder="100"
-            className="w-full px-4 py-2 rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--input))] text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-text))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary)/0.4)]"
-          />
-        </div>
+        <FormInput
+          label="Spend Limit"
+          name="fundAmount"
+          type="number"
+          placeholder="100"
+          onChange={(e) => handleFieldChange("fundAmount", e.target.value)}
+          onBlur={() => handleFieldBlur("fundAmount")}
+          error={getFieldError("fundAmount")}
+          touched={touched.fundAmount}
+          required
+          step="0.01"
+          min="0"
+          helperText="Minimum is 0.01 USDT"
+        />
 
-        <div>
-          <label className="block text-sm text-[hsl(var(--muted-text))] mb-1">
-            Unique Member Identifier
-          </label>
-          <input
-            type="text"
-            value={memberId}
-            onChange={(e) => handleInputChange("memberId", e)}
-            placeholder="E.g. employee123"
-            className="w-full px-4 py-2 rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--input))] text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-text))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary)/0.4)]"
-          />
-        </div>
+        <FormInput
+          label="Unique Member Identifier"
+          name="memberId"
+          type="text"
+          placeholder="e.g., employee123"
+          onChange={(e) => handleFieldChange("memberId", e.target.value)}
+          onBlur={() => handleFieldBlur("memberId")}
+          error={getFieldError("memberId")}
+          touched={touched.memberId}
+          required
+          maxLength={30}
+          helperText="Alphanumeric, hyphens, and underscores only"
+        />
 
-        <div className="flex gap-4 pt-4">
-          <button
-            onClick={async (e) => {
-              e.preventDefault();
-              setIsProcessing(true);
-              try {
-                await handleOnboardMember(
-                  walletAddress,
-                  memberName,
-                  fundAmount,
-                  memberId
-                );
-                setMember({
-                  walletAddress: "",
-                  memberName: "",
-                  fundAmount: 0,
-                  memberId: "",
-                }); // Clear input fields after onboarding
-                navigate("/dashboard"); 
-              } catch (error) {
-                console.error("Error during onboarding: ", error);
-              } finally {
-                setIsProcessing(false);
-              }
-            }}
-            className="border border-[hsl(var(--primary))] text-[hsl(var(--primary))] px-4 py-2 rounded-md hover:bg-[hsl(var(--primary)/0.05)] transition disabled:opacity-50 flex items-center gap-2"
-            disabled={isProcessing}
-          >
-            {isProcessing && <IconLoader size={18} className="animate-spin" />}
-            {isProcessing ? "Processing..." : "Onboard Member"}
-          </button>
-        </div>
-      </div>
+        <button
+          type="submit"
+          disabled={isProcessing || !isFormValid()}
+          className="w-full border border-[hsl(var(--primary))] text-[hsl(var(--primary))] px-4 py-2 rounded-md hover:bg-[hsl(var(--primary)/0.05)] transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-medium"
+        >
+          {isProcessing && <IconLoader size={18} className="animate-spin" />}
+          {isProcessing ? "Processing..." : "Onboard Member"}
+        </button>
+      </form>
     </div>
   );
 };

@@ -1,16 +1,38 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { IconUserDollar, IconLoader2, IconLoader } from "@tabler/icons-react";
+import { IconUserDollar, IconLoader } from "@tabler/icons-react";
 import useContract from "../../hooks/useContract";
 import useReimburseMember from "../../hooks/useReimburseMember";
+import useFormValidation from "../../hooks/useFormValidation";
+import FormSelect from "../../components/FormSelect";
+import FormInput from "../../components/FormInput";
+import { validateAmount, validateRequiredField } from "../../utils/validation";
 
 const ReimburseMember = () => {
-  const [selectedMember, setSelectedMember] = useState("");
-  const [amount, setAmount] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [members, setMembers] = useState([]);
 
   const readOnlyOnboardContract = useContract(true);
   const reimburseMember = useReimburseMember();
-  const [members, setMembers] = useState([]);
+
+  const validators = {
+    selectedMember: (value) => validateRequiredField(value, "Member"),
+    amount: (value) =>
+      validateAmount(value, { min: 0.01, fieldName: "Reimbursement amount" }),
+  };
+
+  const {
+    errors,
+    touched,
+    handleFieldChange,
+    handleFieldBlur,
+    validateAll,
+    clearAllErrors,
+    getFieldError,
+    isFormValid,
+  } = useFormValidation(
+    { selectedMember: "", amount: "" },
+    validators
+  );
 
   const fetchMembers = useCallback(async () => {
     if (!readOnlyOnboardContract) return;
@@ -18,8 +40,6 @@ const ReimburseMember = () => {
     try {
       const data = await readOnlyOnboardContract.getMembers();
       const result = await data.toArray();
-
-      console.log(result);
 
       const parsedMembers = result.map((member) => ({
         id: member[6],
@@ -36,21 +56,34 @@ const ReimburseMember = () => {
     fetchMembers();
   }, [fetchMembers]);
 
-  const handleReimburse = async () => {
-    if (!selectedMember || !amount) return;
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const formData = {
+      selectedMember: e.target.selectedMember.value,
+      amount: e.target.amount.value,
+    };
+
+    if (!validateAll(formData)) {
+      return;
+    }
 
     setIsProcessing(true);
     try {
-      await reimburseMember(selectedMember, amount);
-      // Clear the form fields after successful transaction
-      setSelectedMember("");
-      setAmount("");
+      await reimburseMember(formData.selectedMember, formData.amount);
+      clearAllErrors();
+      e.target.reset();
     } catch (error) {
       console.error("Error during reimbursement: ", error);
     } finally {
       setIsProcessing(false);
     }
   };
+
+  const memberOptions = members.map((member) => ({
+    value: member.id,
+    label: `${member.name} (ID: ${member.id})`,
+  }));
 
   return (
     <div className="max-w-xl mx-auto mt-10 bg-[hsl(var(--card))] p-8 rounded-xl border border-[hsl(var(--border))] shadow-md">
@@ -59,62 +92,44 @@ const ReimburseMember = () => {
         Reimburse Member
       </h2>
 
-      <div className="space-y-4">
-        {/* Member Dropdown */}
-        <div>
-          <label className="block text-sm text-[hsl(var(--muted-text))] mb-1">
-            Select Member
-          </label>
-          <select
-            value={selectedMember}
-            onChange={(e) => setSelectedMember(e.target.value)}
-            className="w-full px-4 py-2 rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--input))] text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-text))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary)/0.4)] appearance-none"
-          >
-            <option
-              value=""
-              disabled
-              className="bg-[hsl(var(--input))] text-[hsl(var(--muted-text))]"
-            >
-              -- Select Member --
-            </option>
-            {members.map((member) => (
-              <option
-                key={member.id}
-                value={member.id}
-                className="bg-[hsl(var(--input))] text-[hsl(var(--foreground))]"
-              >
-                {member.name} ({member.id})
-              </option>
-            ))}
-          </select>
-        </div>
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <FormSelect
+          label="Select Member"
+          name="selectedMember"
+          options={memberOptions}
+          onChange={(e) => handleFieldChange("selectedMember", e.target.value)}
+          onBlur={() => handleFieldBlur("selectedMember")}
+          error={getFieldError("selectedMember")}
+          touched={touched.selectedMember}
+          required
+          placeholder="-- Select a member --"
+          helperText={members.length === 0 ? "No members available" : ""}
+        />
 
-        {/* Amount Input */}
-        <div>
-          <label className="block text-sm text-[hsl(var(--muted-text))] mb-1">
-            Fund Amount
-          </label>
-          <input
-            type="number"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            placeholder="Enter reimbursement amount"
-            className="w-full px-4 py-2 rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--input))] text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-text))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary)/0.4)]"
-          />
-        </div>
+        <FormInput
+          label="Reimbursement Amount"
+          name="amount"
+          type="number"
+          placeholder="Enter reimbursement amount"
+          onChange={(e) => handleFieldChange("amount", e.target.value)}
+          onBlur={() => handleFieldBlur("amount")}
+          error={getFieldError("amount")}
+          touched={touched.amount}
+          required
+          step="0.01"
+          min="0"
+          helperText="Minimum is 0.01 USDT"
+        />
 
-        {/* Reimburse Button */}
-        <div className="pt-4">
-          <button
-            className="border border-[hsl(var(--primary))] text-[hsl(var(--primary))] px-4 py-2 rounded-md hover:bg-[hsl(var(--primary)/0.05)] transition disabled:opacity-50 flex items-center gap-2"
-            onClick={handleReimburse}
-            disabled={!selectedMember || !amount || isProcessing}
-          >
-            {isProcessing && <IconLoader size={18} className="animate-spin" />}
-            {isProcessing ? "Processing..." : "Reimburse"}
-          </button>
-        </div>
-      </div>
+        <button
+          type="submit"
+          disabled={isProcessing || !isFormValid() || members.length === 0}
+          className="w-full border border-[hsl(var(--primary))] text-[hsl(var(--primary))] px-4 py-2 rounded-md hover:bg-[hsl(var(--primary)/0.05)] transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-medium"
+        >
+          {isProcessing && <IconLoader size={18} className="animate-spin" />}
+          {isProcessing ? "Processing..." : "Reimburse"}
+        </button>
+      </form>
     </div>
   );
 };
