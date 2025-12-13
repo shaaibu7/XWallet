@@ -4,6 +4,7 @@ import useContract from "../../hooks/useContract";
 import { useAppKitAccount } from "@reown/appkit/react";
 import useAdminRole from "../../hooks/useAdminRole";
 import { IconTrendingUp, IconUsers, IconWallet, IconActivity, IconRefresh } from "@tabler/icons-react";
+import CopyableAddress from "../../components/CopyableAddress";
 
 const Dashboard = () => {
   const { address: connectedWalletAddress } = useAppKitAccount();
@@ -200,14 +201,11 @@ const Dashboard = () => {
               {userRole}
             </Card>
             <Card title="Wallet Address" colSpanFull icon={<IconActivity size={18} />}>
-              <span className="text-sm font-mono break-all">
-                {connectedWalletAddress
-                  ? `${connectedWalletAddress.slice(
-                      0,
-                      6
-                    )}...${connectedWalletAddress.slice(-4)}`
-                  : "Not Connected"}
-              </span>
+              {connectedWalletAddress ? (
+                <CopyableAddress address={connectedWalletAddress} chars={6} />
+              ) : (
+                <span className="text-sm text-[hsl(var(--muted-text))]">Not Connected</span>
+              )}
             </Card>
           </>
         ) : (
@@ -225,14 +223,11 @@ const Dashboard = () => {
               {memberInfo?.role || "N/A"}
             </Card>
             <Card title="Wallet Address" colSpanFull icon={<IconWallet size={18} />}>
-              <span className="text-sm font-mono break-all">
-                {memberInfo?.address
-                  ? `${memberInfo.address.slice(
-                      0,
-                      6
-                    )}...${memberInfo.address.slice(-4)}`
-                  : "Not Connected"}
-              </span>
+              {memberInfo?.address ? (
+                <CopyableAddress address={memberInfo.address} chars={6} />
+              ) : (
+                <span className="text-sm text-[hsl(var(--muted-text))]">Not Connected</span>
+              )}
             </Card>
           </>
         )}
@@ -370,11 +365,9 @@ const MemberCard = ({ member }) => {
             </div>
           </div>
 
-          <p className="text-xs text-[hsl(var(--muted-text))] break-words">
-            <span className="font-mono">
-              {member.id.slice(0, 6)}...{member.id.slice(-4)}
-            </span>
-          </p>
+          <div className="text-xs">
+            <CopyableAddress address={member.id} chars={6} />
+          </div>
         </div>
       </div>
     </div>

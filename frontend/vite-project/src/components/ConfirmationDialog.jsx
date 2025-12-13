@@ -1,5 +1,6 @@
 import React from "react";
 import { IconAlertTriangle, IconCheck, IconX, IconLoader } from "@tabler/icons-react";
+import CopyableAddress from "./CopyableAddress";
 
 /**
  * Reusable confirmation dialog component for critical actions
@@ -94,15 +95,19 @@ const ConfirmationDialog = ({
                 <span className="text-sm text-[hsl(var(--muted-text))]">
                   {detail.label}
                 </span>
-                <span
-                  className={`text-sm font-medium text-right break-words ${
+                <div
+                  className={`text-sm font-medium text-right ${
                     detail.highlight
                       ? "text-green-600 dark:text-green-500"
                       : "text-[hsl(var(--foreground))]"
                   }`}
                 >
-                  {detail.value}
-                </span>
+                  {detail.isAddress ? (
+                    <CopyableAddress address={detail.value} chars={6} copyToast={false} />
+                  ) : (
+                    <span className="break-words">{detail.value}</span>
+                  )}
+                </div>
               </div>
             ))}
           </div>

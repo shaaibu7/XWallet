@@ -226,7 +226,8 @@ const Spending = () => {
         details={[
           {
             label: "Receiver Address",
-            value: `${formData.receiver.slice(0, 6)}...${formData.receiver.slice(-4)}`,
+            value: formData.receiver,
+            isAddress: true,
           },
           {
             label: "Amount",

@@ -12,6 +12,7 @@ import {
 import useContract from "../../hooks/useContract";
 import { useAppKitAccount } from "@reown/appkit/react";
 import useAdminRole from "../../hooks/useAdminRole";
+import CopyableAddress from "../../components/CopyableAddress";
 
 const TransactionHistory = () => {
   const { address: connectedWalletAddress } = useAppKitAccount();
@@ -332,8 +333,8 @@ const TransactionHistory = () => {
                     <td className="px-6 py-4 text-sm font-semibold text-green-600">
                       {tx.amount} USDT
                     </td>
-                    <td className="px-6 py-4 text-sm text-[hsl(var(--muted-text))] font-mono">
-                      {tx.receiver.slice(0, 6)}...{tx.receiver.slice(-4)}
+                    <td className="px-6 py-4 text-sm">
+                      <CopyableAddress address={tx.receiver} chars={6} />
                     </td>
                     <td className="px-6 py-4 text-sm text-[hsl(var(--muted-text))]">
                       {new Date(tx.timestamp).toLocaleDateString()}

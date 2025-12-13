@@ -184,7 +184,8 @@ const OnboardMembers = () => {
           { label: "Member Name", value: formData.memberName },
           {
             label: "Wallet Address",
-            value: `${formData.walletAddress.slice(0, 6)}...${formData.walletAddress.slice(-4)}`,
+            value: formData.walletAddress,
+            isAddress: true,
           },
           {
             label: "Spend Limit",
