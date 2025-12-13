@@ -3,12 +3,17 @@ import "react-toastify/dist/ReactToastify.css";
 import useContract from "../../hooks/useContract";
 import { useAppKitAccount } from "@reown/appkit/react";
 import useAdminRole from "../../hooks/useAdminRole";
-import { IconTrendingUp, IconUsers, IconWallet, IconActivity, IconRefresh } from "@tabler/icons-react";
-import CopyableAddress from "../../components/CopyableAddress";
+import useRemoveMember from "../../hooks/useRemoveMember";
+import useFreezeMember from "../../hooks/useFreezeMember";
+import useUnfreezeMember from "../../hooks/useUnfreezeMember";
+import { IconUserMinus, IconSnowflake, IconFlame, IconTrendingUp, IconUsers, IconWallet, IconActivity, IconRefresh } from "@tabler/icons-react";
 
 const Dashboard = () => {
   const { address: connectedWalletAddress } = useAppKitAccount();
   const { adminRole } = useAdminRole(connectedWalletAddress);
+  const removeMember = useRemoveMember();
+  const freezeMember = useFreezeMember();
+  const unfreezeMember = useUnfreezeMember();
 
   const userRole = adminRole || "member";
   const [members, setMembers] = useState([]);
@@ -19,7 +24,10 @@ const Dashboard = () => {
     organizationName: "",
     memberSpendLimit: "",
   });
-
+  const [removingMember, setRemovingMember] = useState(null);
+  const [freezingMember, setFreezingMember] = useState(null);
+  const [unfreezingMember, setUnfreezingMember] = useState(null);
+  
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [stats, setStats] = useState({
@@ -40,8 +48,9 @@ const Dashboard = () => {
       const parsedMembers = result.map((member) => ({
         id: member[0],
         name: member[3],
-        spendLimit: member[5],
         active: member[4],
+        frozen: member[5],
+        spendLimit: member[6],
       }));
 
       setMembers(parsedMembers);
@@ -106,6 +115,46 @@ const Dashboard = () => {
     setRefreshing(true);
     await Promise.all([fetchMembers(), fetchWalletInfo(), fetchMemberInfo()]);
     setRefreshing(false);
+  };
+
+  const handleFreezeMember = async (memberAddress) => {
+    try {
+      setFreezingMember(memberAddress);
+      await freezeMember(memberAddress);
+      // Refresh member list after successful freeze
+      await fetchMembers();
+    } catch (error) {
+      console.error("Failed to freeze member:", error);
+    } finally {
+      setFreezingMember(null);
+    }
+  };
+
+  const handleUnfreezeMember = async (memberAddress) => {
+    try {
+      setUnfreezingMember(memberAddress);
+      await unfreezeMember(memberAddress);
+      // Refresh member list after successful unfreeze
+      await fetchMembers();
+    } catch (error) {
+      console.error("Failed to unfreeze member:", error);
+    } finally {
+      setUnfreezingMember(null);
+    }
+  };
+
+  const handleRemoveMember = async (memberAddress) => {
+    try {
+      setRemovingMember(memberAddress);
+      await removeMember(memberAddress);
+      // Refresh member list after successful removal
+      await fetchMembers();
+      await fetchWalletInfo(); // Refresh wallet info to show updated balance
+    } catch (error) {
+      console.error("Failed to remove member:", error);
+    } finally {
+      setRemovingMember(null);
+    }
   };
 
   useEffect(() => {
@@ -241,7 +290,16 @@ const Dashboard = () => {
           </h3>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {members.map((member) => (
-              <MemberCard key={member.id} member={member} />
+              <MemberCard 
+                key={member.id} 
+                member={member}
+                onFreeze={handleFreezeMember}
+                onUnfreeze={handleUnfreezeMember}
+                onRemove={handleRemoveMember}
+                freezingMember={freezingMember}
+                unfreezingMember={unfreezingMember}
+                removingMember={removingMember}
+              />
             ))}
           </div>
         </section>
@@ -327,7 +385,15 @@ const MetricCard = ({ icon, title, value, trend }) => {
   );
 };
 
-const MemberCard = ({ member }) => {
+const MemberCard = ({ 
+  member, 
+  onFreeze, 
+  onUnfreeze, 
+  onRemove, 
+  freezingMember, 
+  unfreezingMember, 
+  removingMember 
+}) => {
   const spendPercentage = member.spendLimit ? Math.min(100, (member.spendLimit / 1000) * 100) : 0;
 
   return (
@@ -335,16 +401,73 @@ const MemberCard = ({ member }) => {
       <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-[hsl(var(--foreground))] to-transparent opacity-10 pointer-events-none"></div>
       <div className="relative z-10">
         <div className="flex items-start justify-between mb-3">
-          <h4 className="font-semibold text-[hsl(var(--foreground))]">{member.name}</h4>
-          <span
-            className={`text-xs px-2 py-1 rounded-full ${
-              member.active
-                ? "bg-green-500/20 text-green-700"
-                : "bg-gray-500/20 text-gray-700"
-            }`}
-          >
-            {member.active ? "Active" : "Inactive"}
-          </span>
+          <div className="flex items-center gap-2">
+            <h4 className="font-semibold text-[hsl(var(--foreground))]">{member.name}</h4>
+            {member.frozen && (
+              <span className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                <IconSnowflake size={10} />
+                Frozen
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <span
+              className={`text-xs px-2 py-1 rounded-full ${
+                member.active
+                  ? "bg-green-500/20 text-green-700"
+                  : "bg-gray-500/20 text-gray-700"
+              }`}
+            >
+              {member.active ? "Active" : "Inactive"}
+            </span>
+            
+            {/* Action Buttons */}
+            <div className="flex gap-1">
+              {member.active && (
+                <>
+                  {member.frozen ? (
+                    <button
+                      onClick={() => onUnfreeze(member.id)}
+                      disabled={unfreezingMember === member.id}
+                      className="text-orange-500 hover:text-orange-700 disabled:opacity-50 p-1 rounded transition-colors"
+                      title="Unfreeze Member"
+                    >
+                      {unfreezingMember === member.id ? (
+                        <div className="animate-spin w-3 h-3 border-2 border-orange-500 border-t-transparent rounded-full"></div>
+                      ) : (
+                        <IconFlame size={14} />
+                      )}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => onFreeze(member.id)}
+                      disabled={freezingMember === member.id}
+                      className="text-blue-500 hover:text-blue-700 disabled:opacity-50 p-1 rounded transition-colors"
+                      title="Freeze Member"
+                    >
+                      {freezingMember === member.id ? (
+                        <div className="animate-spin w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+                      ) : (
+                        <IconSnowflake size={14} />
+                      )}
+                    </button>
+                  )}
+                </>
+              )}
+              <button
+                onClick={() => onRemove(member.id)}
+                disabled={removingMember === member.id}
+                className="text-red-500 hover:text-red-700 disabled:opacity-50 p-1 rounded transition-colors"
+                title="Remove Member"
+              >
+                {removingMember === member.id ? (
+                  <div className="animate-spin w-3 h-3 border-2 border-red-500 border-t-transparent rounded-full"></div>
+                ) : (
+                  <IconUserMinus size={14} />
+                )}
+              </button>
+            </div>
+          </div>
         </div>
 
         <div className="space-y-2 text-sm">
