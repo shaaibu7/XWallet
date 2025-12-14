@@ -874,6 +874,54 @@ describe("WalletX", function () {
       const memberData = await walletX.connect(member).getMember();
       expect(memberData.spendLimit).to.equal(validAmount);
     });
+
+    it("Should verify contract owner cannot bypass admin checks", async function () {
+      // Contract owner is the deployer, but they still need to register as admin
+      // to use admin functions
+      
+      // Owner (deployer) is not automatically an admin
+      const ownerRole = await walletX.getAdminRole(owner.address);
+      expect(ownerRole).to.equal("");
+      
+      // Owner cannot call admin functions without registering as admin
+      await expect(
+        walletX.connect(owner).getWalletAdmin()
+      ).to.be.revertedWith("Not a wallet admin account");
+      
+      await expect(
+        walletX.connect(owner).onboardMembers(
+          member.address,
+          "Test Member",
+          ethers.parseEther("1000"),
+          1n
+        )
+      ).to.be.revertedWith("Not a wallet admin account");
+      
+      // Owner must register as admin like any other user
+      const fundAmount = ethers.parseEther("5000");
+      await mockERC20.transfer(owner.address, fundAmount);
+      await mockERC20.connect(owner).approve(await walletX.getAddress(), fundAmount);
+      await walletX.connect(owner).registerWallet("Owner Wallet", fundAmount);
+      
+      // Now owner is an admin and can use admin functions
+      const ownerWallet = await walletX.connect(owner).getWalletAdmin();
+      expect(ownerWallet.adminAddress).to.equal(owner.address);
+      expect(ownerWallet.active).to.be.true;
+    });
+
+    it("Should verify owner address is separate from admin functionality", async function () {
+      // Verify that owner is stored separately and doesn't grant admin privileges
+      // Owner is set in constructor but doesn't have special permissions
+      const wallet = await walletX.connect(admin).getWalletAdmin();
+      
+      // Admin address is different from contract owner
+      expect(wallet.adminAddress).to.equal(admin.address);
+      expect(wallet.adminAddress).to.not.equal(owner.address);
+      
+      // Owner role check returns empty for owner if not registered as admin
+      const ownerRoleBefore = await walletX.getAdminRole(owner.address);
+      expect(ownerRoleBefore).to.equal("");
+    });
   });
 });
 
