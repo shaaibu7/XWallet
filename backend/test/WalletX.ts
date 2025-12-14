@@ -301,8 +301,8 @@ describe("WalletX", function () {
       await walletX.connect(admin).reimburseMember(memberIdentifier, reimbursementAmount2);
 
       // Verify total spend limit
-      const member = await walletX.connect(member).getMember();
-      expect(member.spendLimit).to.equal(
+      const memberData = await walletX.connect(member).getMember();
+      expect(memberData.spendLimit).to.equal(
         initialSpendLimit + reimbursementAmount1 + reimbursementAmount2
       );
     });
@@ -324,6 +324,112 @@ describe("WalletX", function () {
       expect(members.length).to.equal(1);
       expect(members[0].spendLimit).to.equal(initialSpendLimit + reimbursementAmount);
       expect(members[0].memberIdentifier).to.equal(memberIdentifier);
+    });
+
+    it("Should fail silently when reimbursing member with non-existent memberIdentifier", async function () {
+      const reimbursementAmount = ethers.parseEther("500");
+      const nonExistentIdentifier = 999n;
+      const initialWalletBalance = ethers.parseEther("10000");
+
+      // Get initial wallet balance
+      const walletBefore = await walletX.connect(admin).getWalletAdmin();
+      expect(walletBefore.walletBalance).to.equal(initialWalletBalance);
+
+      // Reimburse with non-existent identifier - should not revert but also not change anything
+      await walletX.connect(admin).reimburseMember(nonExistentIdentifier, reimbursementAmount);
+
+      // Verify wallet balance unchanged (no member found, so no deduction)
+      const walletAfter = await walletX.connect(admin).getWalletAdmin();
+      expect(walletAfter.walletBalance).to.equal(initialWalletBalance);
+
+      // Verify member spend limit unchanged
+      const memberData = await walletX.connect(member).getMember();
+      expect(memberData.spendLimit).to.equal(ethers.parseEther("1000"));
+    });
+
+    it("Should handle reimbursing member with zero amount", async function () {
+      const reimbursementAmount = 0n;
+      const memberIdentifier = 1n;
+      const initialSpendLimit = ethers.parseEther("1000");
+
+      // Reimburse with zero amount
+      await walletX.connect(admin).reimburseMember(memberIdentifier, reimbursementAmount);
+
+      // Verify member spend limit unchanged
+      const memberData = await walletX.connect(member).getMember();
+      expect(memberData.spendLimit).to.equal(initialSpendLimit);
+    });
+
+    it("Should reimburse member when wallet balance equals reimbursement amount exactly", async function () {
+      // Reimburse wallet first to increase balance, then use exact amount
+      const topUpAmount = ethers.parseEther("5000");
+      await mockERC20.connect(admin).approve(await walletX.getAddress(), topUpAmount);
+      await walletX.connect(admin).reimburseWallet(topUpAmount);
+      
+      // Now wallet balance should be 15000 (10000 + 5000)
+      const walletBefore = await walletX.connect(admin).getWalletAdmin();
+      const exactBalance = walletBefore.walletBalance;
+
+      // Reimburse member with exact wallet balance
+      const memberIdentifier = 1n;
+      const initialSpendLimit = ethers.parseEther("1000");
+      await walletX.connect(admin).reimburseMember(memberIdentifier, exactBalance);
+
+      // Verify member spend limit increased
+      const memberData = await walletX.connect(member).getMember();
+      expect(memberData.spendLimit).to.equal(initialSpendLimit + exactBalance);
+
+      // Note: Contract doesn't decrease walletBalance on reimburseMember
+      // This is a known issue - balance remains unchanged
+      const walletAfter = await walletX.connect(admin).getWalletAdmin();
+      expect(walletAfter.walletBalance).to.equal(exactBalance);
+    });
+
+    it("Should handle spendLimit overflow scenario gracefully", async function () {
+      const memberIdentifier = 1n;
+      const maxUint256 = ethers.MaxUint256;
+      const initialSpendLimit = ethers.parseEther("1000");
+
+      // Try to reimburse with a very large amount that would cause overflow
+      // This should fail due to insufficient wallet balance check first
+      await expect(
+        walletX.connect(admin).reimburseMember(memberIdentifier, maxUint256)
+      ).to.be.revertedWithCustomError(walletX, "InsufficientFunds");
+    });
+
+    it("Should reimburse multiple members with same identifier (edge case)", async function () {
+      // Onboard a second member with the same identifier (edge case scenario)
+      const secondMemberFundAmount = ethers.parseEther("500");
+      await walletX.connect(admin).onboardMembers(
+        otherAccount.address,
+        "Second Member Same ID",
+        secondMemberFundAmount,
+        1n // Same identifier as first member
+      );
+
+      const reimbursementAmount = ethers.parseEther("300");
+      const memberIdentifier = 1n;
+
+      // Get initial spend limits
+      const member1Before = await walletX.connect(member).getMember();
+      const member2Before = await walletX.connect(otherAccount).getMember();
+      const initialSpendLimit1 = member1Before.spendLimit;
+      const initialSpendLimit2 = member2Before.spendLimit;
+
+      // Reimburse - should update both members with same identifier
+      await walletX.connect(admin).reimburseMember(memberIdentifier, reimbursementAmount);
+
+      // Verify both members' spend limits increased
+      const member1After = await walletX.connect(member).getMember();
+      const member2After = await walletX.connect(otherAccount).getMember();
+      expect(member1After.spendLimit).to.equal(initialSpendLimit1 + reimbursementAmount);
+      expect(member2After.spendLimit).to.equal(initialSpendLimit2 + reimbursementAmount);
+
+      // Verify wallet balance - note: contract doesn't decrease balance on reimburseMember
+      // This tests the current behavior (which may be a bug - balance should decrease)
+      const wallet = await walletX.connect(admin).getWalletAdmin();
+      // Balance remains at 10000 because onboardMembers and reimburseMember don't decrease it
+      expect(wallet.walletBalance).to.equal(ethers.parseEther("10000"));
     });
   });
 
@@ -486,6 +592,103 @@ describe("WalletX", function () {
       expect(memberData.spendLimit).to.equal(0n);
       expect(memberData.memberIdentifier).to.equal(0n);
       expect(memberData.role).to.equal("");
+    });
+  });
+
+  describe("Wallet ID Tracking", function () {
+    it("Should verify walletId starts at 1", async function () {
+      const walletName = "First Wallet";
+      const fundAmount = ethers.parseEther("1000");
+      await mockERC20.connect(admin).approve(await walletX.getAddress(), fundAmount);
+      await walletX.connect(admin).registerWallet(walletName, fundAmount);
+
+      const wallet = await walletX.connect(admin).getWalletAdmin();
+      expect(wallet.walletId).to.equal(1n);
+    });
+
+    it("Should verify walletId increments correctly for each new wallet", async function () {
+      // Register first wallet
+      const walletName1 = "First Wallet";
+      const fundAmount1 = ethers.parseEther("1000");
+      await mockERC20.connect(admin).approve(await walletX.getAddress(), fundAmount1);
+      await walletX.connect(admin).registerWallet(walletName1, fundAmount1);
+      const wallet1 = await walletX.connect(admin).getWalletAdmin();
+      expect(wallet1.walletId).to.equal(1n);
+
+      // Register second wallet with different admin
+      const walletName2 = "Second Wallet";
+      const fundAmount2 = ethers.parseEther("2000");
+      await mockERC20.transfer(member.address, fundAmount2);
+      await mockERC20.connect(member).approve(await walletX.getAddress(), fundAmount2);
+      await walletX.connect(member).registerWallet(walletName2, fundAmount2);
+      const wallet2 = await walletX.connect(member).getWalletAdmin();
+      expect(wallet2.walletId).to.equal(2n);
+
+      // Register third wallet with another admin
+      const walletName3 = "Third Wallet";
+      const fundAmount3 = ethers.parseEther("3000");
+      await mockERC20.transfer(otherAccount.address, fundAmount3);
+      await mockERC20.connect(otherAccount).approve(await walletX.getAddress(), fundAmount3);
+      await walletX.connect(otherAccount).registerWallet(walletName3, fundAmount3);
+      const wallet3 = await walletX.connect(otherAccount).getWalletAdmin();
+      expect(wallet3.walletId).to.equal(3n);
+    });
+
+    it("Should verify walletId doesn't reset after wallet operations", async function () {
+      // Register wallet
+      const walletName = "Test Wallet";
+      const fundAmount = ethers.parseEther("10000");
+      await mockERC20.connect(admin).approve(await walletX.getAddress(), fundAmount);
+      await walletX.connect(admin).registerWallet(walletName, fundAmount);
+      const walletBefore = await walletX.connect(admin).getWalletAdmin();
+      const initialWalletId = walletBefore.walletId;
+
+      // Perform various operations
+      await walletX.connect(admin).onboardMembers(
+        member.address,
+        "Test Member",
+        ethers.parseEther("1000"),
+        1n
+      );
+
+      await mockERC20.connect(admin).approve(await walletX.getAddress(), ethers.parseEther("5000"));
+      await walletX.connect(admin).reimburseWallet(ethers.parseEther("5000"));
+
+      await walletX.connect(admin).reimburseMember(1n, ethers.parseEther("500"));
+
+      // Verify walletId remains unchanged
+      const walletAfter = await walletX.connect(admin).getWalletAdmin();
+      expect(walletAfter.walletId).to.equal(initialWalletId);
+    });
+
+    it("Should test walletId with multiple admins creating wallets", async function () {
+      // Admin 1 creates wallet
+      const fundAmount1 = ethers.parseEther("1000");
+      await mockERC20.connect(admin).approve(await walletX.getAddress(), fundAmount1);
+      await walletX.connect(admin).registerWallet("Admin1 Wallet", fundAmount1);
+      const wallet1 = await walletX.connect(admin).getWalletAdmin();
+      expect(wallet1.walletId).to.equal(1n);
+
+      // Admin 2 (member) creates wallet
+      const fundAmount2 = ethers.parseEther("2000");
+      await mockERC20.transfer(member.address, fundAmount2);
+      await mockERC20.connect(member).approve(await walletX.getAddress(), fundAmount2);
+      await walletX.connect(member).registerWallet("Admin2 Wallet", fundAmount2);
+      const wallet2 = await walletX.connect(member).getWalletAdmin();
+      expect(wallet2.walletId).to.equal(2n);
+
+      // Admin 3 (otherAccount) creates wallet
+      const fundAmount3 = ethers.parseEther("3000");
+      await mockERC20.transfer(otherAccount.address, fundAmount3);
+      await mockERC20.connect(otherAccount).approve(await walletX.getAddress(), fundAmount3);
+      await walletX.connect(otherAccount).registerWallet("Admin3 Wallet", fundAmount3);
+      const wallet3 = await walletX.connect(otherAccount).getWalletAdmin();
+      expect(wallet3.walletId).to.equal(3n);
+
+      // Verify all wallets have unique IDs
+      expect(wallet1.walletId).to.not.equal(wallet2.walletId);
+      expect(wallet2.walletId).to.not.equal(wallet3.walletId);
+      expect(wallet1.walletId).to.not.equal(wallet3.walletId);
     });
   });
 });
