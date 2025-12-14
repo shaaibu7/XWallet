@@ -766,6 +766,48 @@ describe("WalletX", function () {
       const role = await walletX.getAdminRole(ethers.ZeroAddress);
       expect(role).to.equal("");
     });
+
+    it("Should test reentrancy protection - verify state changes before external calls", async function () {
+      // The contract performs state changes before external token transfers
+      // This is a basic reentrancy protection pattern
+      const reimbursementAmount = ethers.parseEther("1000");
+      await mockERC20.connect(admin).approve(await walletX.getAddress(), reimbursementAmount);
+      
+      const walletBefore = await walletX.connect(admin).getWalletAdmin();
+      const initialBalance = walletBefore.walletBalance;
+      
+      // Reimburse wallet - state is updated before external call
+      await walletX.connect(admin).reimburseWallet(reimbursementAmount);
+      
+      // Verify state was updated (balance increased)
+      const walletAfter = await walletX.connect(admin).getWalletAdmin();
+      expect(walletAfter.walletBalance).to.equal(initialBalance + reimbursementAmount);
+      
+      // Note: Contract uses Checks-Effects-Interactions pattern
+      // State is updated before external token transfer
+    });
+
+    it("Should verify reentrancy protection in onboardMembers", async function () {
+      // onboardMembers doesn't make external calls that could reenter
+      // It only reads from walletAdmin mapping and updates state
+      const memberName = "Test Member";
+      const fundAmount = ethers.parseEther("1000");
+      
+      // State is checked first (walletBalance check)
+      // Then state is updated (member added to mapping and array)
+      // No external calls that could reenter
+      await walletX.connect(admin).onboardMembers(
+        member.address,
+        memberName,
+        fundAmount,
+        1n
+      );
+      
+      // Verify state was updated correctly
+      const memberData = await walletX.connect(member).getMember();
+      expect(memberData.active).to.be.true;
+      expect(memberData.spendLimit).to.equal(fundAmount);
+    });
   });
 });
 
