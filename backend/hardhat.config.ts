@@ -1,6 +1,7 @@
 import type { HardhatUserConfig } from "hardhat/config";
 
 import hardhatToolboxMochaEthersPlugin from "@nomicfoundation/hardhat-toolbox-mocha-ethers";
+import "@nomicfoundation/hardhat-verify";
 import { configVariable } from "hardhat/config";
 
 import dotenv from "dotenv";
@@ -40,7 +41,46 @@ const config: HardhatUserConfig = {
       chainType: "l1",
       url: configVariable("CELO_RPC_URL"),
       accounts: [configVariable("PRIVATE_KEY")],
+      chainId: 42220,
     },
+    celo: {
+      type: "http",
+      chainType: "l1",
+      url: configVariable("CELO_RPC_URL"),
+      accounts: [configVariable("PRIVATE_KEY")],
+      chainId: 42220,
+    },
+    base: {
+      type: "http",
+      chainType: "l1",
+      url: configVariable("BASE_RPC_URL"),
+      accounts: [configVariable("PRIVATE_KEY")],
+      chainId: 8453,
+    },
+  },
+  etherscan: {
+    apiKey: {
+      base: configVariable("BASESCAN_API_KEY"),
+      celo: configVariable("CELOSCAN_API_KEY"),
+    },
+    customChains: [
+      {
+        network: "base",
+        chainId: 8453,
+        urls: {
+          apiURL: "https://api.basescan.org/api",
+          browserURL: "https://basescan.org",
+        },
+      },
+      {
+        network: "celo",
+        chainId: 42220,
+        urls: {
+          apiURL: "https://api.celoscan.io/api",
+          browserURL: "https://celoscan.io",
+        },
+      },
+    ],
   },
 };
 

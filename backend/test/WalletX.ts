@@ -22,9 +22,11 @@ describe("WalletX", function () {
     walletX = await ethers.deployContract("WalletX", [await mockERC20.getAddress()]);
     await walletX.waitForDeployment();
 
-    // Mint tokens to admin for testing
+    // Mint tokens to owner and transfer to admin for testing
     const mintAmount = ethers.parseEther("100000");
     await mockERC20.mint(100000);
+    // Transfer tokens from owner to admin
+    await mockERC20.transfer(admin.address, mintAmount);
   });
 
   describe("registerWallet", function () {
