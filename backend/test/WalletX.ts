@@ -691,5 +691,60 @@ describe("WalletX", function () {
       expect(wallet1.walletId).to.not.equal(wallet3.walletId);
     });
   });
+
+  describe("Access Control & Security", function () {
+    beforeEach(async function () {
+      // Setup: Register a wallet for admin
+      const walletName = "Test Organization";
+      const fundAmount = ethers.parseEther("10000");
+      await mockERC20.connect(admin).approve(await walletX.getAddress(), fundAmount);
+      await walletX.connect(admin).registerWallet(walletName, fundAmount);
+    });
+
+    it("Should verify onlyAdmin modifier works for onboardMembers", async function () {
+      await expect(
+        walletX.connect(otherAccount).onboardMembers(
+          member.address,
+          "Test Member",
+          ethers.parseEther("1000"),
+          1n
+        )
+      ).to.be.revertedWith("Not a wallet admin account");
+    });
+
+    it("Should verify onlyAdmin modifier works for reimburseWallet", async function () {
+      const reimbursementAmount = ethers.parseEther("1000");
+      await mockERC20.connect(otherAccount).approve(await walletX.getAddress(), reimbursementAmount);
+
+      await expect(
+        walletX.connect(otherAccount).reimburseWallet(reimbursementAmount)
+      ).to.be.revertedWith("Not a wallet admin account");
+    });
+
+    it("Should verify onlyAdmin modifier works for reimburseMember", async function () {
+      await walletX.connect(admin).onboardMembers(
+        member.address,
+        "Test Member",
+        ethers.parseEther("1000"),
+        1n
+      );
+
+      await expect(
+        walletX.connect(otherAccount).reimburseMember(1n, ethers.parseEther("500"))
+      ).to.be.revertedWith("Not a wallet admin account");
+    });
+
+    it("Should verify onlyAdmin modifier works for getWalletAdmin", async function () {
+      await expect(
+        walletX.connect(otherAccount).getWalletAdmin()
+      ).to.be.revertedWith("Not a wallet admin account");
+    });
+
+    it("Should verify onlyAdmin modifier works for getMembers", async function () {
+      await expect(
+        walletX.connect(otherAccount).getMembers()
+      ).to.be.revertedWith("Not a wallet admin account");
+    });
+  });
 });
 
