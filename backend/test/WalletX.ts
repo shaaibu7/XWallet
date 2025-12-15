@@ -1078,6 +1078,16 @@ describe("WalletX", function () {
       expect(wallet.walletBalance).to.equal(tokenBalance);
       expect(wallet.walletBalance).to.equal(ethers.parseEther("12000"));
     });
+
+    it("Should match token balance right after wallet registration", async function () {
+      // New wallet registered in beforeEach with 10000 tokens
+      const contractAddress = await walletX.getAddress();
+      const tokenBalance = await mockERC20.balanceOf(contractAddress);
+      const wallet = await walletX.connect(admin).getWalletAdmin();
+
+      expect(wallet.walletBalance).to.equal(ethers.parseEther("10000"));
+      expect(wallet.walletBalance).to.equal(tokenBalance);
+    });
     
     it.skip("TODO: walletBalance should decrease when onboarding members", async function () {
       // Current behavior: walletBalance does not decrease on onboarding
