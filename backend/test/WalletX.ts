@@ -967,5 +967,37 @@ describe("WalletX", function () {
       expect(membersArray[0].spendLimit).to.equal(memberFromMapping.spendLimit);
       expect(memberFromMapping.spendLimit).to.equal(memberFundAmount + reimburseAmount);
     });
+
+    it("Should keep organization members array in sync with member mapping", async function () {
+      const memberFundAmount1 = ethers.parseEther("800");
+      const memberFundAmount2 = ethers.parseEther("1200");
+
+      // Onboard two members
+      await walletX.connect(admin).onboardMembers(
+        member.address,
+        "Member One",
+        memberFundAmount1,
+        1n
+      );
+      await walletX.connect(admin).onboardMembers(
+        otherAccount.address,
+        "Member Two",
+        memberFundAmount2,
+        2n
+      );
+
+      const membersArray = await walletX.connect(admin).getMembers();
+      const member1FromMapping = await walletX.connect(member).getMember();
+      const member2FromMapping = await walletX.connect(otherAccount).getMember();
+
+      expect(membersArray.length).to.equal(2);
+      expect(membersArray[0].memberAddress).to.equal(member.address);
+      expect(membersArray[0].memberIdentifier).to.equal(1n);
+      expect(membersArray[0].spendLimit).to.equal(member1FromMapping.spendLimit);
+
+      expect(membersArray[1].memberAddress).to.equal(otherAccount.address);
+      expect(membersArray[1].memberIdentifier).to.equal(2n);
+      expect(membersArray[1].spendLimit).to.equal(member2FromMapping.spendLimit);
+    });
 });
 
