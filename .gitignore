@@ -22,3 +22,6 @@
 # Environment variables
 .env
 .env.local
+
+# Docs and local notes
+backend/TEST_MILESTONES.md
