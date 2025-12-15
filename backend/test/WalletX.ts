@@ -1028,11 +1028,12 @@ describe("WalletX", function () {
       expect(membersArray.length).to.equal(1);
       expect(membersArray[0].spendLimit).to.equal(memberData.spendLimit);
 
-      // Validate wallet and token balances still match (no external transfers)
+      // Validate wallet balance reflects allocations (token balance holds total)
       const contractAddress = await walletX.getAddress();
       const wallet = await walletX.connect(admin).getWalletAdmin();
       const tokenBalance = await mockERC20.balanceOf(contractAddress);
-      expect(wallet.walletBalance).to.equal(tokenBalance);
+      const expectedWalletBalance = tokenBalance - memberFundAmount; // reimburseMember doesn't change walletBalance
+      expect(wallet.walletBalance).to.equal(expectedWalletBalance);
     });
     
     it("Should keep token balance unchanged when only updating spend limits", async function () {
@@ -1089,9 +1090,8 @@ describe("WalletX", function () {
       expect(wallet.walletBalance).to.equal(tokenBalance);
     });
     
-    it.skip("TODO: walletBalance should decrease when onboarding members", async function () {
-      // Current behavior: walletBalance does not decrease on onboarding
-      // Desired behavior (per spec): walletBalance should deduct allocated funds
+    it("Should decrease walletBalance when onboarding members", async function () {
+      // Desired behavior: walletBalance deducts allocated funds
       const walletBefore = await walletX.connect(admin).getWalletAdmin();
       const memberFundAmount = ethers.parseEther("500");
 
@@ -1103,8 +1103,6 @@ describe("WalletX", function () {
       );
 
       const walletAfter = await walletX.connect(admin).getWalletAdmin();
-      // This currently fails because walletBalance stays the same.
-      // Enable when implementation is fixed.
       expect(walletAfter.walletBalance).to.equal(walletBefore.walletBalance - memberFundAmount);
     });
   });
