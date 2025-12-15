@@ -595,6 +595,46 @@ describe("WalletX", function () {
     });
   });
 
+  describe("getMemberTransactions", function () {
+    beforeEach(async function () {
+      // Setup: Register a wallet for admin and onboard a member
+      const walletName = "Test Organization";
+      const fundAmount = ethers.parseEther("10000");
+      await mockERC20.connect(admin).approve(await walletX.getAddress(), fundAmount);
+      await walletX.connect(admin).registerWallet(walletName, fundAmount);
+
+      const memberName = "John Doe";
+      const memberFundAmount = ethers.parseEther("1000");
+      const memberIdentifier = 1n;
+      await walletX.connect(admin).onboardMembers(
+        member.address,
+        memberName,
+        memberFundAmount,
+        memberIdentifier
+      );
+    });
+
+    it("Should return empty array when member has no transactions", async function () {
+      const txs = await walletX.connect(member).getMemberTransactions(member.address);
+      expect(txs.length).to.equal(0);
+    });
+
+    it("Should record reimburseMember transactions for the member", async function () {
+      const reimbursementAmount1 = ethers.parseEther("200");
+      const reimbursementAmount2 = ethers.parseEther("300");
+
+      await walletX.connect(admin).reimburseMember(1n, reimbursementAmount1);
+      await walletX.connect(admin).reimburseMember(1n, reimbursementAmount2);
+
+      const txs = await walletX.connect(member).getMemberTransactions(member.address);
+      expect(txs.length).to.equal(2);
+      expect(txs[0].amount).to.equal(reimbursementAmount1);
+      expect(txs[0].reciever).to.equal(member.address);
+      expect(txs[1].amount).to.equal(reimbursementAmount2);
+      expect(txs[1].reciever).to.equal(member.address);
+    });
+  });
+
   describe("Wallet ID Tracking", function () {
     it("Should verify walletId starts at 1", async function () {
       const walletName = "First Wallet";

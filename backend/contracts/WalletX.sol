@@ -140,6 +140,11 @@ contract WalletX {
             if (members[i].memberIdentifier == _memberIdentifier) {
                 members[i].spendLimit += _amount;
                 walletMember[members[i].memberAddress].spendLimit += _amount;
+
+                // Track member transactions
+                memberTransactions[members[i].memberAddress].push(
+                    memberTransaction({amount: _amount, reciever: members[i].memberAddress})
+                );
             }
         }
     }
