@@ -1034,5 +1034,24 @@ describe("WalletX", function () {
       const tokenBalance = await mockERC20.balanceOf(contractAddress);
       expect(wallet.walletBalance).to.equal(tokenBalance);
     });
-});
+    
+    it.skip("TODO: walletBalance should decrease when onboarding members", async function () {
+      // Current behavior: walletBalance does not decrease on onboarding
+      // Desired behavior (per spec): walletBalance should deduct allocated funds
+      const walletBefore = await walletX.connect(admin).getWalletAdmin();
+      const memberFundAmount = ethers.parseEther("500");
 
+      await walletX.connect(admin).onboardMembers(
+        member.address,
+        "Allocation Member",
+        memberFundAmount,
+        1n
+      );
+
+      const walletAfter = await walletX.connect(admin).getWalletAdmin();
+      // This currently fails because walletBalance stays the same.
+      // Enable when implementation is fixed.
+      expect(walletAfter.walletBalance).to.equal(walletBefore.walletBalance - memberFundAmount);
+    });
+  });
+});
