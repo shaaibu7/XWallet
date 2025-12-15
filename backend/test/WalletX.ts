@@ -999,5 +999,40 @@ describe("WalletX", function () {
       expect(membersArray[1].memberIdentifier).to.equal(2n);
       expect(membersArray[1].spendLimit).to.equal(member2FromMapping.spendLimit);
     });
+
+    it("Should maintain consistent state after multiple operations sequence", async function () {
+      // Top up wallet
+      const topUpAmount = ethers.parseEther("2000");
+      await mockERC20.connect(admin).approve(await walletX.getAddress(), topUpAmount);
+      await walletX.connect(admin).reimburseWallet(topUpAmount);
+
+      // Onboard member
+      const memberFundAmount = ethers.parseEther("1500");
+      await walletX.connect(admin).onboardMembers(
+        member.address,
+        "Seq Member",
+        memberFundAmount,
+        1n
+      );
+
+      // Reimburse member
+      const reimburseAmount = ethers.parseEther("300");
+      await walletX.connect(admin).reimburseMember(1n, reimburseAmount);
+
+      // Validate member data
+      const memberData = await walletX.connect(member).getMember();
+      expect(memberData.spendLimit).to.equal(memberFundAmount + reimburseAmount);
+
+      // Validate members array
+      const membersArray = await walletX.connect(admin).getMembers();
+      expect(membersArray.length).to.equal(1);
+      expect(membersArray[0].spendLimit).to.equal(memberData.spendLimit);
+
+      // Validate wallet and token balances still match (no external transfers)
+      const contractAddress = await walletX.getAddress();
+      const wallet = await walletX.connect(admin).getWalletAdmin();
+      const tokenBalance = await mockERC20.balanceOf(contractAddress);
+      expect(wallet.walletBalance).to.equal(tokenBalance);
+    });
 });
 
