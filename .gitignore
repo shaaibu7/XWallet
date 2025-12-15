@@ -18,11 +18,4 @@
 
 # Hardhat coverage reports
 /coverage
-
-# Environment variables
 .env
-.env.local
-
-# Docs and local notes
-backend/TEST_MILESTONES.md
-backend/TEST_MILESTONES.md

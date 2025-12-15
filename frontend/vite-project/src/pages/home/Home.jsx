@@ -1,5 +1,4 @@
 import { motion } from "framer-motion";
-import family_budget from "../../assets/family-budget-concept.png";
 import XWalletFooter from "../../layout/component/XWalletFooter";
 import XWalletHeader from "../../layout/component/XWalletHeader";
 import '../../../connection';
@@ -44,11 +43,9 @@ export default function LandingPage() {
               transition={{ duration: 0.7, delay: 0.3 }}
               className="flex justify-center md:w-1/2"
             >
-              <img
-                src={family_budget}
-                alt="Family Budget Planning"
-                className="w-full max-w-md rounded-lg shadow-lg"
-              />
+              <div className="w-full max-w-md h-64 rounded-lg shadow-lg bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+                <p className="text-white text-2xl font-bold">Family Budget</p>
+              </div>
             </motion.div>
           </motion.div>
         </section>

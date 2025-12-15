@@ -1,65 +1,126 @@
 import React, { useState } from "react";
 import { IconBuildingBank, IconLoader } from "@tabler/icons-react";
 import useReimburseWallet from "../../hooks/useReimburseWallet";
+import useFormValidation from "../../hooks/useFormValidation";
+import FormInput from "../../components/FormInput";
+import ConfirmationDialog from "../../components/ConfirmationDialog";
+import { validateAmount } from "../../utils/validation";
 
 const ReimburseOrganization = () => {
   const handleReimburseWallet = useReimburseWallet();
-  const [reimburse, setReimburse] = useState({
-    reimburseAmount: 0,
-  });
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [formData, setFormData] = useState({ reimburseAmount: "" });
+  const [confirmError, setConfirmError] = useState("");
 
-  const handleInputChange = (name, e) => {
-    // console.log(e.target.name);
-    setReimburse((preState) => ({ ...preState, [name]: e.target.value }));
+  const validators = {
+    reimburseAmount: (value) =>
+      validateAmount(value, { min: 0.01, fieldName: "Reimbursement amount" }),
   };
 
-  const { reimburseAmount } = reimburse;
+  const {
+    errors,
+    touched,
+    handleFieldChange,
+    handleFieldBlur,
+    validateAll,
+    clearAllErrors,
+    getFieldError,
+    isFormValid,
+  } = useFormValidation(
+    { reimburseAmount: "" },
+    validators
+  );
 
- return (
-    <div className="max-w-xl mx-auto mt-10 bg-[hsl(var(--card))] p-8 rounded-xl border border-[hsl(var(--border))] shadow-md">
-      <h2 className="text-2xl font-bold mb-6 text-[hsl(var(--foreground))] flex items-center gap-2">
-        <IconBuildingBank size={24} />
-        Reimburse Organization
-      </h2>
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm text-[hsl(var(--muted-text))] mb-1">
-            Fund Amount
-          </label>
-          <input
+    const newFormData = {
+      reimburseAmount: e.target.reimburseAmount.value,
+    };
+
+    if (!validateAll(newFormData)) {
+      return;
+    }
+
+    setFormData(newFormData);
+    setConfirmError("");
+    setShowConfirmation(true);
+  };
+
+  const handleConfirm = async () => {
+    setIsProcessing(true);
+    setConfirmError("");
+    try {
+      await handleReimburseWallet(formData.reimburseAmount);
+      clearAllErrors();
+      setShowConfirmation(false);
+      setFormData({ reimburseAmount: "" });
+      const form = document.querySelector("form");
+      if (form) form.reset();
+    } catch (error) {
+      console.error("Error during reimbursement: ", error);
+      setConfirmError(error.message || "Reimbursement failed. Please try again.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  return (
+    <>
+      <div className="max-w-xl mx-auto mt-10 bg-[hsl(var(--card))] p-8 rounded-xl border border-[hsl(var(--border))] shadow-md">
+        <h2 className="text-2xl font-bold mb-6 text-[hsl(var(--foreground))] flex items-center gap-2">
+          <IconBuildingBank size={24} />
+          Reimburse Organization
+        </h2>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <FormInput
+            label="Reimbursement Amount"
+            name="reimburseAmount"
             type="number"
-            value={reimburseAmount}
-            onChange={(e) => handleInputChange("reimburseAmount", e)}
             placeholder="Enter amount to reimburse"
-            className="w-full px-4 py-2 rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--input))] text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-text))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary)/0.4)]"
+            onChange={(e) => handleFieldChange("reimburseAmount", e.target.value)}
+            onBlur={() => handleFieldBlur("reimburseAmount")}
+            error={getFieldError("reimburseAmount")}
+            touched={touched.reimburseAmount}
+            required
+            step="0.01"
+            min="0"
+            helperText="Minimum is 0.01 USDT"
           />
-        </div>
 
-        <div className="flex gap-4 pt-4">
           <button
-            onClick={async (e) => {
-              e.preventDefault();
-              setIsProcessing(true);
-              try {
-                await handleReimburseWallet(reimburseAmount);
-                setReimburse({ reimburseAmount: 0 }); // Clear input field
-              } catch (error) {
-                console.error("Error during reimbursement: ", error);
-              } finally {
-                setIsProcessing(false);
-              }
-            }}
-            className="border border-[hsl(var(--primary))] text-[hsl(var(--primary))] px-4 py-2 rounded-md hover:bg-[hsl(var(--primary)/0.05)] transition disabled:opacity-50 flex items-center gap-2"
-            disabled={isProcessing}
+            type="submit"
+            disabled={!isFormValid()}
+            className="w-full border border-[hsl(var(--primary))] text-[hsl(var(--primary))] px-4 py-2 rounded-md hover:bg-[hsl(var(--primary)/0.05)] transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-medium"
           >
             {isProcessing && <IconLoader size={18} className="animate-spin" />}
             {isProcessing ? "Processing..." : "Reimburse"}
           </button>
-        </div>
+        </form>
       </div>
-    </div>
+
+      <ConfirmationDialog
+        isOpen={showConfirmation}
+        title="Confirm Organization Reimbursement"
+        message="Please review the reimbursement details before confirming."
+        details={[
+          {
+            label: "Reimbursement Amount",
+            value: `${formData.reimburseAmount} USDT`,
+            highlight: true,
+          },
+        ]}
+        amount={formData.reimburseAmount}
+        isLoading={isProcessing}
+        error={confirmError}
+        onConfirm={handleConfirm}
+        onCancel={() => setShowConfirmation(false)}
+        confirmText="Reimburse"
+        isDangerous={Number(formData.reimburseAmount) > 1000}
+      />
+    </>
   );
 };
 

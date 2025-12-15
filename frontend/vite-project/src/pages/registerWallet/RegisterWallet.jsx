@@ -1,83 +1,145 @@
-import React, { useState, useEffect } from "react";
-import { IconCheck, IconWallet, IconLoader } from "@tabler/icons-react";
+import React, { useState } from "react";
+import { IconWallet, IconLoader } from "@tabler/icons-react";
 import useRegisterWallet from "../../hooks/useRegisterWallet";
+import useFormValidation from "../../hooks/useFormValidation";
+import FormInput from "../../components/FormInput";
+import ConfirmationDialog from "../../components/ConfirmationDialog";
+import { validateWalletName, validateAmount } from "../../utils/validation";
 
 const RegisterWallet = () => {
   const handleRegisterWallet = useRegisterWallet();
-  const [wallet, setWallet] = useState({
-    walletName: "",
-    fundAmount: 0,
-  });
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [formData, setFormData] = useState({ walletName: "", fundAmount: "" });
+  const [confirmError, setConfirmError] = useState("");
 
-  const handleInputChange = (name, e) => {
-    console.log(e.target.name);
-    setWallet((preState) => ({ ...preState, [name]: e.target.value }));
+  const validators = {
+    walletName: (value) => validateWalletName(value),
+    fundAmount: (value) =>
+      validateAmount(value, { min: 0.01, fieldName: "Fund amount" }),
   };
 
-  const { walletName, fundAmount } = wallet;
+  const {
+    errors,
+    touched,
+    handleFieldChange,
+    handleFieldBlur,
+    validateAll,
+    clearAllErrors,
+    getFieldError,
+    isFormValid,
+  } = useFormValidation(
+    { walletName: "", fundAmount: "" },
+    validators
+  );
 
-  useEffect(() => {
-    console.log(wallet);
-  }, [wallet]);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
- return (
-    <div className="max-w-xl mx-auto mt-10 bg-[hsl(var(--card))] p-8 rounded-xl border border-[hsl(var(--border))] shadow-md">
-      <h2 className="text-2xl font-bold mb-6 text-[hsl(var(--foreground))] flex items-center gap-2">
-        <IconWallet size={24} />
-        Register Wallet
-      </h2>
+    const newFormData = {
+      walletName: e.target.walletName.value,
+      fundAmount: e.target.fundAmount.value,
+    };
 
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm text-[hsl(var(--muted-text))] mb-1">
-            Wallet Name
-          </label>
-          <input
+    if (!validateAll(newFormData)) {
+      return;
+    }
+
+    setFormData(newFormData);
+    setConfirmError("");
+    setShowConfirmation(true);
+  };
+
+  const handleConfirm = async () => {
+    setIsProcessing(true);
+    setConfirmError("");
+    try {
+      await handleRegisterWallet(formData.walletName, formData.fundAmount);
+      clearAllErrors();
+      setShowConfirmation(false);
+      setFormData({ walletName: "", fundAmount: "" });
+      // Reset form
+      const form = document.querySelector("form");
+      if (form) form.reset();
+    } catch (error) {
+      console.error("Error during wallet registration: ", error);
+      setConfirmError(
+        error.message || "Failed to register wallet. Please try again."
+      );
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  return (
+    <>
+      <div className="max-w-xl mx-auto mt-10 bg-[hsl(var(--card))] p-8 rounded-xl border border-[hsl(var(--border))] shadow-md">
+        <h2 className="text-2xl font-bold mb-6 text-[hsl(var(--foreground))] flex items-center gap-2">
+          <IconWallet size={24} />
+          Register Wallet
+        </h2>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <FormInput
+            label="Wallet Name"
+            name="walletName"
             type="text"
-            value={walletName}
-            onChange={(e) => handleInputChange("walletName", e)}
-            placeholder="Enter wallet name"
-            className="w-full px-4 py-2 rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--input))] text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-text))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary)/0.4)]"
+            placeholder="Enter wallet name (e.g., Family Fund)"
+            onChange={(e) => handleFieldChange("walletName", e.target.value)}
+            onBlur={() => handleFieldBlur("walletName")}
+            error={getFieldError("walletName")}
+            touched={touched.walletName}
+            required
+            maxLength={50}
+            helperText="Give your wallet a descriptive name"
           />
-        </div>
 
-        <div>
-          <label className="block text-sm text-[hsl(var(--muted-text))] mb-1">
-            Fund Amount
-          </label>
-          <input
+          <FormInput
+            label="Fund Amount"
+            name="fundAmount"
             type="number"
-            value={fundAmount}
-            onChange={(e) => handleInputChange("fundAmount", e)}
             placeholder="Enter amount to fund"
-            className="w-full px-4 py-2 rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--input))] text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-text))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary)/0.4)]"
+            onChange={(e) => handleFieldChange("fundAmount", e.target.value)}
+            onBlur={() => handleFieldBlur("fundAmount")}
+            error={getFieldError("fundAmount")}
+            touched={touched.fundAmount}
+            required
+            step="0.01"
+            min="0"
+            helperText="Minimum amount is 0.01 USDT"
           />
-        </div>
 
-        <div className="flex gap-4 pt-4">
           <button
-            className="border border-[hsl(var(--primary))] text-[hsl(var(--primary))] px-4 py-2 rounded-md hover:bg-[hsl(var(--primary)/0.05)] transition disabled:opacity-50 flex items-center gap-2"
-            onClick={async (e) => {
-              e.preventDefault();
-              setIsProcessing(true);
-              try {
-                await handleRegisterWallet(walletName, fundAmount);
-                setWallet({ walletName: "", fundAmount: 0 }); // Clear input fields
-              } catch (error) {
-                console.error("Error during wallet registration: ", error);
-              } finally {
-                setIsProcessing(false);
-              }
-            }}
-            disabled={isProcessing}
+            type="submit"
+            disabled={!isFormValid()}
+            className="w-full border border-[hsl(var(--primary))] text-[hsl(var(--primary))] px-4 py-2 rounded-md hover:bg-[hsl(var(--primary)/0.05)] transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 font-medium"
           >
             {isProcessing && <IconLoader size={18} className="animate-spin" />}
             {isProcessing ? "Processing..." : "Register Wallet"}
           </button>
-        </div>
+        </form>
       </div>
-    </div>
+
+      <ConfirmationDialog
+        isOpen={showConfirmation}
+        title="Confirm Wallet Registration"
+        message="Please review the details before confirming this action."
+        details={[
+          { label: "Wallet Name", value: formData.walletName },
+          {
+            label: "Fund Amount",
+            value: `${formData.fundAmount} USDT`,
+            highlight: true,
+          },
+        ]}
+        amount={formData.fundAmount}
+        isLoading={isProcessing}
+        error={confirmError}
+        onConfirm={handleConfirm}
+        onCancel={() => setShowConfirmation(false)}
+        confirmText="Register"
+      />
+    </>
   );
 };
 
