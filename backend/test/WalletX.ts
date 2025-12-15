@@ -1035,6 +1035,50 @@ describe("WalletX", function () {
       expect(wallet.walletBalance).to.equal(tokenBalance);
     });
     
+    it("Should keep token balance unchanged when only updating spend limits", async function () {
+      // Onboard member
+      const memberFundAmount = ethers.parseEther("700");
+      await walletX.connect(admin).onboardMembers(
+        member.address,
+        "SpendLimit Member",
+        memberFundAmount,
+        1n
+      );
+
+      // Capture balances
+      const contractAddress = await walletX.getAddress();
+      const tokenBalanceBefore = await mockERC20.balanceOf(contractAddress);
+      const walletBefore = await walletX.connect(admin).getWalletAdmin();
+
+      // Update spend limit via reimburseMember
+      const reimburseAmount = ethers.parseEther("200");
+      await walletX.connect(admin).reimburseMember(1n, reimburseAmount);
+
+      const tokenBalanceAfter = await mockERC20.balanceOf(contractAddress);
+      const walletAfter = await walletX.connect(admin).getWalletAdmin();
+
+      expect(tokenBalanceAfter).to.equal(tokenBalanceBefore);
+      expect(walletAfter.walletBalance).to.equal(walletBefore.walletBalance);
+    });
+
+    it("Should reflect token balance after reimburseWallet deposits", async function () {
+      const depositAmount1 = ethers.parseEther("1200");
+      const depositAmount2 = ethers.parseEther("800");
+
+      await mockERC20.connect(admin).approve(await walletX.getAddress(), depositAmount1);
+      await walletX.connect(admin).reimburseWallet(depositAmount1);
+
+      await mockERC20.connect(admin).approve(await walletX.getAddress(), depositAmount2);
+      await walletX.connect(admin).reimburseWallet(depositAmount2);
+
+      const contractAddress = await walletX.getAddress();
+      const tokenBalance = await mockERC20.balanceOf(contractAddress);
+      const wallet = await walletX.connect(admin).getWalletAdmin();
+
+      expect(wallet.walletBalance).to.equal(tokenBalance);
+      expect(wallet.walletBalance).to.equal(ethers.parseEther("12000"));
+    });
+    
     it.skip("TODO: walletBalance should decrease when onboarding members", async function () {
       // Current behavior: walletBalance does not decrease on onboarding
       // Desired behavior (per spec): walletBalance should deduct allocated funds
