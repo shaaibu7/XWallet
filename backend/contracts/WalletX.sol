@@ -107,7 +107,9 @@ contract WalletX {
             revert Error.InsufficientFunds();
         }
 
-        
+        // Deduct allocated funds from the admin's available wallet balance
+        walletAdmin[msg.sender].walletBalance -= _fundAmount;
+
         WalletMember memory member = WalletMember({
             memberAddress: _memberAddress,
             adminAddress: msg.sender,
