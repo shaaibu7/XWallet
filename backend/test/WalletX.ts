@@ -923,5 +923,49 @@ describe("WalletX", function () {
       expect(ownerRoleBefore).to.equal("");
     });
   });
+
+  describe("State Consistency", function () {
+    beforeEach(async function () {
+      // Register a wallet for admin
+      const walletName = "State Wallet";
+      const fundAmount = ethers.parseEther("10000");
+      await mockERC20.connect(admin).approve(await walletX.getAddress(), fundAmount);
+      await walletX.connect(admin).registerWallet(walletName, fundAmount);
+    });
+
+    it("Should keep wallet balance in sync with token balance", async function () {
+      // Top up the wallet
+      const topUpAmount = ethers.parseEther("5000");
+      await mockERC20.connect(admin).approve(await walletX.getAddress(), topUpAmount);
+      await walletX.connect(admin).reimburseWallet(topUpAmount);
+
+      const contractAddress = await walletX.getAddress();
+      const wallet = await walletX.connect(admin).getWalletAdmin();
+      const tokenBalance = await mockERC20.balanceOf(contractAddress);
+
+      expect(wallet.walletBalance).to.equal(tokenBalance);
+    });
+
+    it("Should keep member spendLimit consistent between mapping and array", async function () {
+      // Onboard member
+      const memberFundAmount = ethers.parseEther("1000");
+      await walletX.connect(admin).onboardMembers(
+        member.address,
+        "Member One",
+        memberFundAmount,
+        1n
+      );
+
+      // Reimburse member to increase spend limit
+      const reimburseAmount = ethers.parseEther("500");
+      await walletX.connect(admin).reimburseMember(1n, reimburseAmount);
+
+      const memberFromMapping = await walletX.connect(member).getMember();
+      const membersArray = await walletX.connect(admin).getMembers();
+
+      expect(membersArray[0].memberAddress).to.equal(member.address);
+      expect(membersArray[0].spendLimit).to.equal(memberFromMapping.spendLimit);
+      expect(memberFromMapping.spendLimit).to.equal(memberFundAmount + reimburseAmount);
+    });
 });
 
